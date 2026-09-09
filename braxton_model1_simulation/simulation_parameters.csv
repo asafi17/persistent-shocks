@@ -1,0 +1,12 @@
+parameter,value,source
+F,0.9316,Braxton et al. Table 2
+QE,0.06894,Braxton et al. Table 2
+QU,0.2751,Braxton et al. Table 2
+BE,0.0005,Braxton et al. Table 2
+BU,-0.1877,Braxton et al. Table 2
+Q0,0.6733,Braxton et al. Table 2
+R,0.05,Simulation choice; Table 2 does not report R
+p_EU,0.04,Simulation choice
+p_UE,0.57,Simulation choice
+N,2500.0,Simulation choice
+T,15.0,Simulation choice
