@@ -1,5 +1,5 @@
 ---
-title: "learning"
+title: "Understanding Kalman Filter, Smoother, EM, and Braxton et al"
 format: html
 editor: visual
 embed-resources: true
@@ -29,39 +29,39 @@ df = cbind(
 
 ```
 
-## What are we trying to estimate? 
+## What are we trying to estimate?
 
-Braxton et al. assume that an employed worker's observed earnings consist of two components 
+Braxton et al. assume that an employed worker's observed earnings consist of two components
 
 $$
 \underbrace{y_{it}}_{\text{Observed earnings}} = \underbrace{z_{it}}_{\text{Persistent earnings}} + \underbrace{\omega_{it}}_{\text{Temporary earnings}}
 $$
 
-The problem is that we observe $y_{it}$, but neither $z_{it}$ nor $\omega_{it}$. The authors assume that persistent earnings evolve according to 
+The problem is that we observe $y_{it}$, but neither $z_{it}$ nor $\omega_{it}$. The authors assume that persistent earnings evolve according to
 
 $$
 z_{it} = F z_{i,t-1} + B(l_{it}) + \nu_{it}
 $$
 
-where $F$ measures persistence in earnings, $B(l_{it})$ captures earnings growth or depreciation associated with employment status, and $\nu_{it}$ is a new shock to persistent earnings. The Kalman filter uses this dynamic model of persistent income, together with observed income, to estimate the unobserved state, persistent income, $z_{it}$. 
+where $F$ measures persistence in earnings, $B(l_{it})$ captures earnings growth or depreciation associated with employment status, and $\nu_{it}$ is a new shock to persistent earnings. The Kalman filter uses this dynamic model of persistent income, together with observed income, to estimate the unobserved state, persistent income, $z_{it}$.
 
-This model illustrates that there are **two sources of uncertainty** when predicting today's persistent earnings: 
+This model illustrates that there are **two sources of uncertainty** when predicting today's persistent earnings:
 
-1. Inherited uncertainty: we don't know yesterday's $z_{i,t-1}$ perfectly (it's unobserved)   
+1.  Inherited uncertainty: we don't know yesterday's $z_{i,t-1}$ perfectly (it's unobserved)
 
-2. New uncertainty: Today's shock $\nu_{it}$ is unpredictable.  
+2.  New uncertainty: Today's shock $\nu_{it}$ is unpredictable.
 
-We will define $M_{i, t|t}$ as the *posterior* variance of our uncertainty about today's true persistent earnings, $M_{i, t|t-1}$ as the *prior* variance of our uncertainty about today's true persistent earnings (e.g., before observing today's income for individual *i*). Then we will allow the machinery of the Kalman filter to produce our estimate of persistent income as well as our uncertainty around that latent state. 
+We will define $M_{i, t|t}$ as the *posterior* variance of our uncertainty about today's true persistent earnings, $M_{i, t|t-1}$ as the *prior* variance of our uncertainty about today's true persistent earnings (e.g., before observing today's income for individual *i*). Then we will allow the machinery of the Kalman filter to produce our estimate of persistent income as well as our uncertainty around that latent state.
 
-## Two-state Kalman filter 
+## Two-state Kalman filter
 
-The paper defines the latent state as 
+The paper defines the latent state as
 
 $$
 \zeta_{it} = \begin{bmatrix} z_{i,t} \\ z_{i,t-1} \end{bmatrix}
 $$
 
-where $z$ is the *unobserved persistent income component* of an individual's income in time $t$. 
+where $z$ is the *unobserved persistent income component* of an individual's income in time $t$.
 
 The authors make the state-equation depend on employment status. Specifically, it is:
 
@@ -77,7 +77,7 @@ $$
 \end{aligned}
 $$
 
-$F$ and $B(l_{i,t})$ are parameters that must be initialized with a guess, then revised using the EM algorithm. But why have a two-dimensional state variable? It turns out to just be a book-keeping trick to help in the EM step. When we expand using matrix algebra, we see that the state-dynamics follow an AR(1) where $F$ is just an autoregressive persistence coefficient and $B$ is either an employed-or-unemployed specific intercept. 
+$F$ and $B(l_{i,t})$ are parameters that must be initialized with a guess, then revised using the EM algorithm. But why have a two-dimensional state variable? It turns out to just be a book-keeping trick to help in the EM step. When we expand using matrix algebra, we see that the state-dynamics follow an AR(1) where $F$ is just an autoregressive persistence coefficient and $B$ is either an employed-or-unemployed specific intercept.
 
 $$
 \begin{aligned}
@@ -92,36 +92,35 @@ $$
 y_{it} = H(l_{i,t}) \zeta_{it} + l_{E,it}\omega_{it}
 $$
 
-where 
+where
 
 $$
 H = \begin{bmatrix} l_{E,it} & 0 \end{bmatrix}
 $$
 
-for an employed observation. This measurement equation is how we relate the *unobserved state* to the *observed measurement*. The measurement equation as written allows for two cases: 
+for an employed observation. This measurement equation is how we relate the *unobserved state* to the *observed measurement*. The measurement equation as written allows for two cases:
 
-- Employed ($l_{E,it} = 1$): $y_{it} = z_{it} + \omega_{it}$. Observed earnings provide information about persistent earnings.   
+-   Employed ($l_{E,it} = 1$): $y_{it} = z_{it} + \omega_{it}$. Observed earnings provide information about persistent earnings.
 
-- Unemployed ($l_{E,it} = 0$): The measurement contains no information about $z_{it}$. The filter propagates the state equation, but skips the measurement update. 
+-   Unemployed ($l_{E,it} = 0$): The measurement contains no information about $z_{it}$. The filter propagates the state equation, but skips the measurement update.
 
-Here, the authors just say that observed income $y$ is the sum of a persistent income state $z$ and a temporary income shock $\omega$. 
+Here, the authors just say that observed income $y$ is the sum of a persistent income state $z$ and a temporary income shock $\omega$.
 
 $$
 \begin{bmatrix} 1 & 0 \end{bmatrix} \begin{bmatrix} z_{i,t} \\ z_{i,t-1}\end{bmatrix} + \omega_{it} \rightarrow \boxed{ z_{it} + \omega_{it} = y_{it}}
 $$
 
+### The algorithm
 
-### The algorithm 
-
-1. Store the current period (a priori) estimate using the state-equation 
+1.  Store the current period (a priori) estimate using the state-equation
 
 $$
 \hat{\zeta}_{i, t|t-1} = \hat{F} \hat{\zeta}_{i,t-1|t-1} + \hat{B}(l_{i,t}) 
 $$
 
-2. Store our *a priori* uncertainty around the latent state $\operatorname{Var}(\zeta_{it} | Y_{i,t-1})$. 
+2.  Store our *a priori* uncertainty around the latent state $\operatorname{Var}(\zeta_{it} | Y_{i,t-1})$.
 
-We can compute this by using an arithmetic trick. The expectation of the latent state conditional on yesterday's information is *constant*. And the variance of a random variable minus a constant is equal to the variance of the random variable (e.g., $\operatorname{Var}(X + c) = \operatorname{Var}(X)$). So 
+We can compute this by using an arithmetic trick. The expectation of the latent state conditional on yesterday's information is *constant*. And the variance of a random variable minus a constant is equal to the variance of the random variable (e.g., $\operatorname{Var}(X + c) = \operatorname{Var}(X)$). So
 
 $$
 \operatorname{Var}(\zeta_{it} | Y_{i,t-1}) = \operatorname{Var}(\zeta_{it} - \hat{\zeta}_{i,t|t-1} | Y_{i,t-1}) = M_{i,t|t-1}
@@ -133,7 +132,7 @@ $$
 M_{i,t|t-1} = \operatorname{Var}(\zeta_{it} - \hat{\zeta}_{i,t|t-1} | Y_{i,t-1}) = \operatorname{Var}((\hat{F} \zeta_{i,t-1} + \hat{B}(l_{it}) + \begin{bmatrix} \nu_{it} \\ 0 \end{bmatrix}) - (\hat{F} \hat{\zeta}_{i,t-1|t-1} + \hat{B}(l_{it}))
 $$
 
-This simplifies to 
+This simplifies to
 
 $$
 = \operatorname{Var}((\hat{F} \zeta_{i,t-1} + \begin{bmatrix} \nu_{it} \\ 0 \end{bmatrix}) - (\hat{F} \hat{\zeta}_{i,t-1|t-1}))
@@ -145,36 +144,33 @@ $$
 = \operatorname{Var}(\hat{F}(\zeta_{i,t-1} - \hat{\zeta}_{i,t-1|t-1}|Y_{i,t-1}) + \begin{bmatrix} \nu_{it} \\ 0 \end{bmatrix}) = \hat{F} \operatorname{Var}(\zeta_{i,t-1} - \hat{\zeta}_{i,t-1|t-1}|Y_{i,t-1}) \hat{F}' + \operatorname{Var}(\begin{bmatrix} \nu_{it} \\ 0 \end{bmatrix})
 $$
 
-Which gives us 
+Which gives us
 
 $$
 \boxed{M_{i,t|t-1} = \hat{F} M_{i,t-1|t-1} \hat{F}' + \begin{bmatrix} Q(l_{it}) & 0 \\ 0 & 0 \end{bmatrix}}
 $$
 
-because we assume that today's innovation $\nu_{it}$ is independent of yesterday's estimation error. 
+because we assume that today's innovation $\nu_{it}$ is independent of yesterday's estimation error.
 
-
-3. Estimate the Kalman gain (if employed, skip if not). The authors define this as: 
+3.  Estimate the Kalman gain (if employed, skip if not). The authors define this as:
 
 $$
 K_{it} = M_{i,t|t-1} H'(l_{i,t})[H(l_{i,t}) M_{i,t|t-1} H'(l_{i,t}) + R(l_{i,t})]^{-1}
 $$
 
-This term tells us how much to trust our process equation estimate and how much to trust our new observation. 
+This term tells us how much to trust our process equation estimate and how much to trust our new observation.
 
-4. Update the state vector using the Kalman gain and the innovation (forecast error)   
+4.  Update the state vector using the Kalman gain and the innovation (forecast error)
 
 $$
 \hat{\zeta}_{i,t|t} = \hat{\zeta}_{i,t|t-1} + K_{it} (y_{it} - H(l_{i,t}) \hat{\zeta}_{i,t|t-1})
 $$
 
-5. Update the covariance using the Kalman gain and prior covariance. 
+5.  Update the covariance using the Kalman gain and prior covariance.
 
 $$
 M_{i,t|t} = M_{i,t|t-1} - K_{i,t} H(l_{i,t}) M_{i,t|t-1}
 $$
-
-
 
 ```{r two-state-filter}
 rm(list=setdiff(ls(), 'df'))
@@ -259,16 +255,15 @@ kalman_filter = function(F_mat,
 
 ## Two-state Kalman smoother
 
-### Why do we need a smoother? 
+### Why do we need a smoother?
 
-
-The Kalman filter gives us an estimate of the latent state at time $t$ using only observations through time $t$. 
+The Kalman filter gives us an estimate of the latent state at time $t$ using only observations through time $t$.
 
 $$
 \hat{\zeta}_{i,t|t} = \operatorname{E}[\zeta_{it}|Y_{it}]
 $$
 
-But suppose we learn something new about the state at $t+1$. We want to use that information to revise our estimate of the state at $t$. So we propose: 
+But suppose we learn something new about the state at $t+1$. We want to use that information to revise our estimate of the state at $t$. So we propose:
 
 $$
 \underbrace{\hat{\zeta}_{i,t|t}}_{\text{Posterior filter estimate}} + \underbrace{J_{it}}_{\text{Correction coefficient}} \underbrace{(\zeta_{i,t+1} - \hat{\zeta}_{i,t+1|t})}_{\text{New information}}
@@ -284,7 +279,7 @@ $$
 E[\zeta_{it} | \zeta_{i,t+1}, Y_{it}] = \hat{\zeta}_{i,t|t} + J_{it} (\zeta_{i,t+1} - \hat{\zeta}_{i,t+1|t})
 $$
 
-This is a multivariate regression. And we know that the coefficient in a multivariate regression is: 
+This is a multivariate regression. And we know that the coefficient in a multivariate regression is:
 
 $$
 J_{it} = \underbrace{\operatorname{Cov}(\zeta_{it}, \zeta_{i,t+1}|Y_{it})}_{\text{Cross-covariance}} \underbrace{\operatorname{Var}(\zeta_{i,t+1}|Y_{it})^{-1}}_{\text{Inverse prior covariance}}
@@ -292,7 +287,7 @@ $$
 
 ### Computable expression for $J$
 
-If we work through the algebra... 
+If we work through the algebra...
 
 $$
 J_{it} = (\operatorname{E}[\zeta_{it} \zeta_{i,t+1}'|Y_{it}] - \operatorname{E}[\zeta_{it}|Y_{it}] \operatorname{E}[\zeta_{i,t+1}|Y_{it}]') \operatorname{Var}(\zeta_{i,t+1}|Y_{it})^{-1}
@@ -322,7 +317,7 @@ $$
 E[\zeta_{it} \zeta_{it}'\hat{F}' |Y_{it}] + E[\zeta_{it} \hat{B}(l_{i,t+1})'|Y_{it}] + E[\zeta_{it} \begin{bmatrix} \nu_{i,t+1} & 0 \end{bmatrix}|Y_{it}]
 $$
 
-We know that the 3rd term is 0 because the shocks are independent of the current state and mean zero. The 2nd term -- conditioning on $Y_{it}$ means that we can treat the drift term as a constant and this term reduces to the posterior kalman filter estimate. The 1st term -- conditioning on $Y_{it}$ means that $\hat{F}$ can be treated as a constant. We can rewrite our expression as:  
+We know that the 3rd term is 0 because the shocks are independent of the current state and mean zero. The 2nd term -- conditioning on $Y_{it}$ means that we can treat the drift term as a constant and this term reduces to the posterior kalman filter estimate. The 1st term -- conditioning on $Y_{it}$ means that $\hat{F}$ can be treated as a constant. We can rewrite our expression as:
 
 $$
 E[\zeta_{it} \zeta_{it}' |Y_{it}] \hat{F}' + \hat{\zeta}_{i,t|t} \hat{B}(l_{i,t+1})'
@@ -338,7 +333,7 @@ Substituting $M_{it|t} = Var(\zeta_{it}|Y_{it})$
 
 $$
 \operatorname{E}[\zeta_{it} \zeta_{i,t+1}'|Y_{it}] = M_{it|t} \hat{F}'+ \hat{\zeta}_{it|t} \hat{\zeta}_{it|t}' \hat{F}' + \hat{\zeta}_{i,t|t}\hat{B}(l_{i,t+1})'
-$$ 
+$$
 
 Taking this term and plugging it back in to our definition of $J_{it}$
 
@@ -348,28 +343,27 @@ $$
 
 Substituting $\hat{\zeta}_{i,t+1|t} = \hat{F} \hat{\zeta}_{i,t|t} + \hat{B}(l_{i,t+1})$
 
-
 $$
 J_{it} = (M_{it|t} \hat{F}'+ \hat{\zeta}_{it|t} \hat{\zeta}_{it|t}' \hat{F}' + \hat{\zeta}_{i,t|t}\hat{B}(l_{i,t+1})' - \hat{\zeta}_{it|t} (\hat{F} \hat{\zeta}_{i,t|t} + \hat{B}(l_{i,t+1}))') \operatorname{Var}(\zeta_{i,t+1}|Y_{it})^{-1}
 $$
 
-Allowing us to define the **smoothing gain** as: 
+Allowing us to define the **smoothing gain** as:
 
 $$
 \boxed{J_{it} = M_{it|t} \hat{F}' M_{i,t+1|t}^{-1}}
 $$ {#eq-smoothing-gain}
 
-Read term by term, this says 
+Read term by term, this says
 
-- $M_{i,t|t}$: How uncertain are we about today's state? If we're very certain, we don't need to revise much.   
-- $\hat{F}'$: How are today's and tomorrow's states connected? the transition matrix determines how information about tomorrow can tell us something about today.   
-- $M_{i,t+1|t}^{-1}$: How uncertain is tomorrow's state before observing tomorrow's earnings? Greater uncertainty about tomorrow's state generally means a given revision to tomorrow's estimate provides less information about today. 
+-   $M_{i,t|t}$: How uncertain are we about today's state? If we're very certain, we don't need to revise much.\
+-   $\hat{F}'$: How are today's and tomorrow's states connected? the transition matrix determines how information about tomorrow can tell us something about today.\
+-   $M_{i,t+1|t}^{-1}$: How uncertain is tomorrow's state before observing tomorrow's earnings? Greater uncertainty about tomorrow's state generally means a given revision to tomorrow's estimate provides less information about today.
 
-$J_{it}$ therefore acts like a regression coefficient: covariance between today's and tomorrow's states divided by tomorrow's variance. 
+$J_{it}$ therefore acts like a regression coefficient: covariance between today's and tomorrow's states divided by tomorrow's variance.
 
-For example, suppose we knew today's state with absolute certainty. The first term would be 0 and there would be no useful information to bring back from tomorrow's information. 
+For example, suppose we knew today's state with absolute certainty. The first term would be 0 and there would be no useful information to bring back from tomorrow's information.
 
-### Obtaining the smoothed estimate 
+### Obtaining the smoothed estimate
 
 Remember we started by stating that our best estimate of today's latent state, given all observations through today and knowing tomorrow's true latent state is
 
@@ -383,13 +377,13 @@ $$
 E[\zeta_{i,t+1}|Y_{i,T}] = \hat{\zeta}_{i,t+1|T}
 $$
 
-So we need a way to relate what we have to what we want. We can do this by taking the expectation of our regression relationship, conditional on all available observations. 
+So we need a way to relate what we have to what we want. We can do this by taking the expectation of our regression relationship, conditional on all available observations.
 
 $$
 E[E[\zeta_{it} | \zeta_{i,t+1}, Y_{it}] | Y_{i,T}] = E[\hat{\zeta}_{i,t|t} + J_{it} (\zeta_{i,t+1} - \hat{\zeta}_{i,t+1|t})| Y_{i,T}]
 $$
 
-Conditioning on all observations $Y_{iT}$ means that $\hat{\zeta}_{i,t|t}$, $J_{i,t}$ and $\hat{\zeta}_{i,t+1|t}$ are already known. 
+Conditioning on all observations $Y_{iT}$ means that $\hat{\zeta}_{i,t|t}$, $J_{i,t}$ and $\hat{\zeta}_{i,t+1|t}$ are already known.
 
 $$
 E[E[\zeta_{it} | \zeta_{i,t+1}, Y_{it}] | Y_{i,T}] = E[\hat{\zeta}_{i,t|t} | Y_{i,T}] + J_{i,t} E[\zeta_{i,t+1} | Y_{i,T}] - J_{i,t} E[ \hat{\zeta}_{i,t+1|t})| Y_{i,T}]
@@ -405,13 +399,13 @@ $$
 E[E[\zeta_{it} | \zeta_{i,t+1}, Y_{it}] | Y_{i,T}] = E[E[\zeta_{it} | \zeta_{i,t+1}, Y_{i,T}] | Y_{i,T}]
 $$
 
-This then allows us to use the law of iterated expectations to write 
+This then allows us to use the law of iterated expectations to write
 
 $$
 E[E[\zeta_{it} | \zeta_{i,t+1}, Y_{i,T}] | Y_{i,T}] = E[\zeta_{it} | Y_{i,T}] = \hat{\zeta}_{i,t|T}
 $$
 
-This provides us with the smoothed estimate: 
+This provides us with the smoothed estimate:
 
 $$
 \boxed{\hat{\zeta}_{i,t|T} = \hat{\zeta}_{i,t|t} + J_{i,t} (\hat{\zeta}_{i,t+1|T} - \hat{\zeta}_{i,t+1|t})}
@@ -419,9 +413,9 @@ $$ {#eq-smoothing-estimate}
 
 ### Smoothed Covariance $M_{i,t|T}$
 
-In the section above, we defined our smoothed estimate. Next, we will derive the smoothed covariance. 
+In the section above, we defined our smoothed estimate. Next, we will derive the smoothed covariance.
 
-First, we need to define the smoothing prediction error. 
+First, we need to define the smoothing prediction error.
 
 $$
 e_{it}^s = \zeta_{it} -  \hat{\zeta}_{it|T}
@@ -439,19 +433,19 @@ $$
 e_{it}^s = \zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} (\zeta_{i,t+1|T} - \hat{\zeta}_{i,t+1|t})
 $$
 
-Next, we need to calculate the uncertainty of this error. 
+Next, we need to calculate the uncertainty of this error.
 
 $$
 \operatorname{Var}(e_{it}^{s}|Y_{it}) = E[e_{it}^s e^{s'}_{it} | Y_{it}] - E[e_{it}^s | Y_{it}] E[e_{it}^s|Y_{it}]'
 $$
 
 and because our prediction has conditional mean zero
- 
+
 $$
 \operatorname{Var}(e^s_{it}|Y_{it}) = E[e_{it}^s e_{it}^{s'} | Y_{it}] 
 $$
 
-substituting in the expression for the prediction error 
+substituting in the expression for the prediction error
 
 $$
 \operatorname{Var}(e^s_{it}|Y_{it}) = E[(\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{i,t} (\zeta_{i,t+1} - \hat{\zeta}_{i,t+1|t})) (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{i,t} (\zeta_{i,t+1} - \hat{\zeta}_{i,t+1|t}))' | Y_{it}] 
@@ -469,24 +463,23 @@ $$
 e_{it}^s e_{it}^{s'} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t+1} + J_{it} \hat{\zeta}_{i,t+1|t}) (\zeta_{it}' - \hat{\zeta}_{i,t|t}' - \zeta_{i,t+1}' J_{it}' + \hat{\zeta}_{i,t+1|t}' J_{it}')
 $$
 
-After a bunch of algebra, we end up with 
+After a bunch of algebra, we end up with
 
 $$ 
 \boxed{M_{it|T} = M_{i,t|t} + J_{it} (M_{i,t+1|T} - M_{i,t+1|t}) J_{it}'}
 $$ {#eq-smoothing-covariance}
 
+### The algorithm
 
-### The algorithm 
+1.  Initialize with the period $t=T$ Kalman filter estimate of the latent state $\hat{\zeta}_{i,t|t}$ and its error covariance $M_{i,t|t}$.
 
-1. Initialize with the period $t=T$ Kalman filter estimate of the latent state $\hat{\zeta}_{i,t|t}$ and its error covariance $M_{i,t|t}$.
+2.  Calculate the smoothing gain $J_{i,t}$ as shown in @eq-smoothing-gain
 
-2. Calculate the smoothing gain $J_{i,t}$ as shown in @eq-smoothing-gain
+3.  Compute the smoothed state at period $T-1$ as shown in @eq-smoothing-estimate
 
-3. Compute the smoothed state at period $T-1$ as shown in @eq-smoothing-estimate  
+4.  Update the covariance of the state at period $T-1$ as shown in @eq-smoothing-covariance
 
-4. Update the covariance of the state at period $T-1$ as shown in @eq-smoothing-covariance
-
-5. Repeat until period 1  
+5.  Repeat until period 1
 
 ```{r}
 kalman_smoother = function(F_mat,
@@ -553,16 +546,16 @@ kalman_smoother = function(F_mat,
 
 ```
 
-## A Toy Example 
+## A Toy Example
 
-Let's test our functions, `kalman_filter()` and `kalman_smoother()` on some fake data. In the table below, we have 5 periods for one individual. `lE` is the employment status, `lU` is an indicator for whether they are unemployed, and `y_t` is the observed income for this individual at time $t$. 
+Let's test our functions, `kalman_filter()` and `kalman_smoother()` on some fake data. In the table below, we have 5 periods for one individual. `lE` is the employment status, `lU` is an indicator for whether they are unemployed, and `y_t` is the observed income for this individual at time $t$.
 
 ```{r}
 DT::datatable(df, 
               caption = 'Fake dataset')
 ```
 
-The purpose of the paper is to estimate the persistent income component of the individual using the observed and unobserved periods. 
+The purpose of the paper is to estimate the persistent income component of the individual using the observed and unobserved periods.
 
 ```{r, message=F, warning=F}
 ks = kalman_smoother(
@@ -699,11 +692,11 @@ ggplot(
 
 ```
 
-This works as expected! The Kalman smoother reduced our uncertainty around the persistent income state as evidenced by the thinner 95\% confidence band. During unemployment $t=3$, the smoother incorporates information from periods 4 and 5 to revise the state downward during unemployment relative to the posterior and upward at period 4 because period 5's observed earnings were quite high. The smoothed estimate is *not* always closest to observed income. In the terminal period, the smoother and the posterior agree because there are no future observations remaining. The smoother's uncertainty reduction is really noticeable during the unemployment period. This is because the filter cannot update the state uncertainty estimate using an observation during this period -- there's no income to observe. So we just add uncertainty from period 2 to 3 from the new prediction. The smoother on the other hand can incorporate observed earnings in future periods to reduce uncertainty about the state in period 3. 
+This works as expected! The Kalman smoother reduced our uncertainty around the persistent income state as evidenced by the thinner 95% confidence band. During unemployment $t=3$, the smoother incorporates information from periods 4 and 5 to revise the state downward during unemployment relative to the posterior and upward at period 4 because period 5's observed earnings were quite high. The smoothed estimate is *not* always closest to observed income. In the terminal period, the smoother and the posterior agree because there are no future observations remaining. The smoother's uncertainty reduction is really noticeable during the unemployment period. This is because the filter cannot update the state uncertainty estimate using an observation during this period -- there's no income to observe. So we just add uncertainty from period 2 to 3 from the new prediction. The smoother on the other hand can incorporate observed earnings in future periods to reduce uncertainty about the state in period 3.
 
-## Expectation Maximization (EM) [Work in Progress]
+## Expectation Maximization (EM) \[Work in Progress\]
 
-### Why do we need EM? 
+### Why do we need EM?
 
 Let's work with a scalar version of the income process. Recall
 
@@ -715,21 +708,21 @@ $$
 \underbrace{\omega_t}_{\text{Temporary shock}}
 $$
 
-and the persistent component evolves to 
+and the persistent component evolves to
 
 $$
 z_t=Fz_{t-1}+\nu_t
 $$
 
-where $F$ measures persistence, $\nu_t$ is a persistence earnings shock with variance $Q$ and $\omega_t$ is a temporary earnings shock with variance $R$. 
+where $F$ measures persistence, $\nu_t$ is a persistence earnings shock with variance $Q$ and $\omega_t$ is a temporary earnings shock with variance $R$.
 
 There are two problems
 
-1. We observe $y_t$ but not $z_t$. We need to recover the unobserved persistent component. 
+1.  We observe $y_t$ but not $z_t$. We need to recover the unobserved persistent component.
 
-2. We don't know $\theta = \{F, R, Q\}$ which govern the income process. 
+2.  We don't know $\theta = \{F, R, Q\}$ which govern the income process.
 
-These problems are interdependent. The Kalman smoother estimates the latent earnings path *given the parameters*, while estimating the parameters would be straightforward if we observed that latent path. 
+These problems are interdependent. The Kalman smoother estimates the latent earnings path *given the parameters*, while estimating the parameters would be straightforward if we observed that latent path.
 
 **EM provides a way to alternate between these two problems.**
 
@@ -737,8 +730,9 @@ For example, suppose we somehow observed the entire persistent earnings series $
 
 $$
 z_t = F z_{t-1} + \nu_t
-$$
-we could just estimate $F$ using OLS! But, our actual model is 
+$$ 
+
+we could just estimate $F$ using OLS! But, our actual model is
 
 $$
 \begin{aligned}
@@ -747,25 +741,31 @@ z_t &= Fz_{t-1}+\nu_t
 \end{aligned}
 $$
 
+Using a bit of algebra we can express $y_t$ excluding persistent income. 
+
 $$
-y_t = z_t + \omega_t  \rightarrow y_t = F z_{t-1} + \nu_t + \omega_t \\
-y_{t-1} = z_{t-1} + \omega_{t-1} \rightarrow z_{t-1} = y_{t-1} - \omega_{t-1} \\ 
-y_t = F y_{t-1} - F\omega_{t-1} + \nu_t + \omega_t \\ 
+\begin{aligned}
+y_t &= z_t + \omega_t  \rightarrow \\
+y_t &= F z_{t-1} + \nu_t + \omega_t \rightarrow \\
+y_{t-1} &= z_{t-1} + \omega_{t-1} \rightarrow \\
+z_{t-1} &= y_{t-1} - \omega_{t-1} \rightarrow \\ 
+y_t &= F y_{t-1} - F\omega_{t-1} + \nu_t + \omega_t 
+\end{aligned}
 $$
 
-let $u_t = \nu_t + \omega_t - F \omega_{t-1}$ 
- 
+Now let $u_t = \nu_t + \omega_t - F \omega_{t-1}$. Then we get
+
 $$
 y_t = F y_{t-1} + u_t
 $$
 
-Recall that OLS requires that the regressors are uncorrelated with the error term. But clearly this is violated if $u_t$ and $y_{t-1}$ both contain $\omega_{t-1}$. 
+Recall that OLS requires that the regressors are uncorrelated with the error term. But clearly this is violated if $u_t$ and $y_{t-1}$ both contain $\omega_{t-1}$.
 
 $$
 \operatorname{Cov}(z_{t-1}+ \omega_{t-1}, \nu_t + \omega_t - F \omega_{t-1}) 
 $$
 
-Using the linearity of covariance: 
+Using the linearity of covariance:
 
 $$
 \begin{aligned}
@@ -778,7 +778,7 @@ $$
 \end{aligned}
 $$
 
-Under our independence assumption (e.g., that $\nu_t$ and $\omega_t$ are mutually independent across time and from one another) and that $F > 0$, the first five terms are 0 and 
+Under our independence assumption (e.g., that $\nu_t$ and $\omega_t$ are mutually independent across time and from one another) and that $F > 0$, the first five terms are 0 and
 
 $$
 \operatorname{Cov}(y_{t-1},u_t)
@@ -787,19 +787,19 @@ $$
 
 So using OLS with observed earnings would violate the regressor-error orthogonality condition and, because $F > 0$, we would underestimate $F$ in this regression.
 
-This is where Shumway and Stoffer (1982) paper makes its contribution: they show that we can work with the conditional expectations of the unobserved quantities rather than pretending we observe them. 
+This is where Shumway and Stoffer (1982) make their contribution: they show that we can work with the conditional expectations of the unobserved quantities rather than pretending we observe them.
 
 ### Estimating $F$ with EM
 
 If we observed $z_1, ..., z_T$, then our persistence parameter would just be
 
 $$
-\hat{F} = (z_{t-1}'z_t)^{-1} z_{t-1}'z_t
+\hat{F} = (z_{t-1}'z_{t-1})^{-1} z_{t-1}'z_t
 $$
 
-OLS provides us the estimate of $F$ which minimizes the sum of squared residuals. 
+OLS provides us the estimate of $F$ which minimizes the sum of squared residuals.
 
-But given that what we actually have are information about the conditional distributions for $z_1, ..., z_T$ EM minimizes its **conditional expectation**. 
+But given that what we actually have are information about the conditional distributions for $z_1, ..., z_T$ EM minimizes its **conditional expectation**.
 
 $$
 \min_F E[ \sum_{t=2}^T (z_t - F z_{t-1})^2 | Y_T, \theta^k]
@@ -808,12 +808,14 @@ $$
 where $\theta^k$ represents our current parameter guesses. We hold those guesses fixed when calculating the conditional expectation, then choose a new $F$ to minimize it. We aren't pretending the smoothed state estimates are true states, instead we're averaging the squared residuals over the uncertainty about the states. If we expand that squared residual and differentiate with respect to $F$ we obtain
 
 $$
+\begin{aligned}
 E [\sum_{t=2}^T
 z_t^2 - 2 z_t F z_{t-1} + F^2 z_{t-1}^2 | Y_T, \theta^k ] \rightarrow  \\
 E[\sum z_t^2 | Y_T, \theta^k] - 2F E[ \sum z_t z_{t-1}|Y_T, \theta^k] + F^2 E[\sum z_{t-1}^2 | Y_T, \theta^k]
+\end{aligned}
 $$
 
-Let's simplify the notation by defining 
+Let's simplify the notation by defining
 
 $$
 \begin{aligned}
@@ -823,29 +825,33 @@ C &= E\left[\sum_{t=2}^T z_{t-1}^2\mid Y_T,\theta^{(k)}\right]
 \end{aligned}
 $$
 
-This gives us 
+This gives us
 
 $$
 G(F) = A - 2FB + F^2 C
 $$
 
-Differentiating wrt to F, we find 
+Differentiating wrt to F and solving for the minimum, we find
 
 $$
-\frac{\partial G}{\partial F} = -2B + 2FC = 0 \rightarrow \\ 
-FC = B \rightarrow \\ 
-F = B / C \rightarrow \\
-\boxed{F^{k+1} = \frac{E\left[\sum_{t=2}^T z_tz_{t-1}|Y_T,\theta^k\right]}{E\left[\sum_{t=2}^T z_{t-1}^2\mid Y_T,\theta^{(k)}\right]}}
+\begin{aligned}
+\frac{\partial G}{\partial F} &= -2B + 2FC = 0  \\ 
+FC &= B  \\ 
+F &= B / C \\
+F^{k+1} &= \frac{E\left[\sum_{t=2}^T z_tz_{t-1}|Y_T,\theta^k\right]}{E\left[\sum_{t=2}^T z_{t-1}^2\mid Y_T,\theta^{(k)}\right]}
+\end{aligned}
 $$
 
-Now let's connect this back to the Kalman smoother. Our smoother provides us with 
+Now let's connect this back to the Kalman smoother. Our smoother provides us with
 
 $$
+\begin{aligned}
 E[z_t|Y_T, \theta^k] = \hat{z}_{t|T}, \\
 E[z_{t-1}|Y_T, \theta^k] = \hat{z}_{t-1|T} 
+\end{aligned}
 $$
 
-To bridge these objects to the numerator and denominator of our EM estimate of $F$ we need to recall the covariance identity: 
+To bridge these objects to the numerator and denominator of our EM estimate of $F$ we need to recall the covariance identity:
 
 $$
 \begin{aligned}
@@ -885,19 +891,19 @@ $$
 \boxed{F^{k+1} = \frac{M_{t|T}[1,2] + \hat{z}_{t|T} \hat{z}_{t-1|T}}{M_{t|T}[2,2] + (\hat{z}_{t-1|T})^2}}
 $$
 
-*Recall that $M_{t|T}$ is the variance-covariance matrix of $z_t$ and $z_{t-1}$
+\*Recall that $M_{t|T}$ is the conditional variance-covariance matrix of $z_t$ and $z_{t-1}$ 
 
 ### Estimating $F$ in Braxton et al
 
-Now that we've derived the simple update for $F$, we can take a look at Braxton et al's actual state equation and extend what we've discussed to cover their model. 
+Now that we've derived the simple update for $F$, we can take a look at Braxton et al's actual state equation and extend what we've discussed to cover their model.
 
-The state equation is 
+The state equation is
 
 $$
 z_{it} = F z_{i,t-1} + B^E l_{it}^E + B^U l_{it}^U + \nu_{it}
 $$
 
-where 
+where
 
 $$
 \operatorname{Var}(\nu_{it}\mid l_{it})=
@@ -907,21 +913,12 @@ Q^U & \text{if unemployed}
 \end{cases}
 $$
 
-In the section above, we minimized the expected sum of squared residuals. But in Braxton et al, the residuals will exclude  employment-specific drift and the variance of those residuals differs by employment status. 
+In the section above, we minimized the expected sum of squared residuals. But in Braxton et al, the residuals will exclude employment-specific drift and the variance of those residuals differs by employment status.
 
-We would first need to modify the original least-squares object function to account for the choice to model employed and unemployed observations have different shock variances and that the authors estimate common parameters using the pooled (individual) sample: 
+We would first need to modify the original least-squares object function to account for the choice to model employed and unemployed observations have different shock variances and that the authors estimate common parameters using the pooled (individual) sample:
 
 $$
 \min_{F,B^E,B^U} E [\sum_i \sum_t \frac{(z_{it} - F z_{i,t-1} - B^E l_{it}^E - B^U l_{it}^U)^2}{Q(l_{it})}  \mid Y_T, \theta^k]
 $$
 
-The denominator of this object illustrates that observations are weighted according to their variance. In practice, the variance of shocks to persistent income for the unemployed are larger and thus receive a smaller weight. The idea here is that values with greater uncertainty are less informative than those with less uncertainty when estimating $F$, 
-
-
-
-
-
-
-
-
-
+The denominator of this object illustrates that observations are weighted according to their variance. In practice, the variance of shocks to persistent income for the unemployed are larger and thus receive a smaller weight. The idea here is that values with greater uncertainty are less informative than those with less uncertainty when estimating $F$,

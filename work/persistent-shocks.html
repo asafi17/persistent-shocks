@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>learning</title>
+<title>Understanding Kalman Filter, Smoother, EM, and Braxton et al</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -4874,7 +4874,12 @@ window.Quarto = {
   <li><a href="#the-algorithm-1" id="toc-the-algorithm-1" class="nav-link" data-scroll-target="#the-algorithm-1"><span class="header-section-number">3.6</span> The algorithm</a></li>
   </ul></li>
   <li><a href="#a-toy-example" id="toc-a-toy-example" class="nav-link" data-scroll-target="#a-toy-example"><span class="header-section-number">4</span> A Toy Example</a></li>
-  <li><a href="#expectation-maximization-em-work-in-progress" id="toc-expectation-maximization-em-work-in-progress" class="nav-link" data-scroll-target="#expectation-maximization-em-work-in-progress"><span class="header-section-number">5</span> Expectation Maximization (EM) [Work in Progress]</a></li>
+  <li><a href="#expectation-maximization-em-work-in-progress" id="toc-expectation-maximization-em-work-in-progress" class="nav-link" data-scroll-target="#expectation-maximization-em-work-in-progress"><span class="header-section-number">5</span> Expectation Maximization (EM) [Work in Progress]</a>
+  <ul class="collapse">
+  <li><a href="#why-do-we-need-em" id="toc-why-do-we-need-em" class="nav-link" data-scroll-target="#why-do-we-need-em"><span class="header-section-number">5.1</span> Why do we need EM?</a></li>
+  <li><a href="#estimating-f-with-em" id="toc-estimating-f-with-em" class="nav-link" data-scroll-target="#estimating-f-with-em"><span class="header-section-number">5.2</span> Estimating <span class="math inline">\(F\)</span> with EM</a></li>
+  <li><a href="#estimating-f-in-braxton-et-al" id="toc-estimating-f-in-braxton-et-al" class="nav-link" data-scroll-target="#estimating-f-in-braxton-et-al"><span class="header-section-number">5.3</span> Estimating <span class="math inline">\(F\)</span> in Braxton et al</a></li>
+  </ul></li>
   </ul>
 </nav>
 </div>
@@ -4882,7 +4887,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">learning</h1>
+<h1 class="title">Understanding Kalman Filter, Smoother, EM, and Braxton et al</h1>
 </div>
 
 
@@ -5336,8 +5341,8 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">caption =</span> <span class="st">&#39;Fake dataset&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-02a68587d88db71af7aa" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-02a68587d88db71af7aa">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-5e3c83ce6bf9252cddc0" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-5e3c83ce6bf9252cddc0">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <p>The purpose of the paper is to estimate the persistent income component of the individual using the observed and unobserved periods.</p>
@@ -5486,40 +5491,177 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 </section>
 <section id="expectation-maximization-em-work-in-progress" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="expectation-maximization-em-work-in-progress"><span class="header-section-number">5</span> Expectation Maximization (EM) [Work in Progress]</h2>
-<p>Given the current parameter guesses <span class="math inline">\(\theta^k = \{F, B_E, B_U, Q_E, Q_U, R, Q_0\}\)</span> we have run the Kalman filter, the Kalman smoother and recover for every period <span class="math inline">\(\hat{\zeta}_{i,t|T} = E(\zeta_{i,t}|Y)\)</span> and <span class="math inline">\(M_{i,t|T} = \text{Var}(\zeta_{i,t} | Y)\)</span>.</p>
-<p>The paper’s EM procedure then treats these smoothed moments as the information needed to maximize the expected complete-data log-likelihood, updates the parameters, and repeats until convergence.</p>
-<p>Let’s start with <span class="math inline">\(R\)</span>.</p>
-<p>The part of the complete-data likelihood involving R comes from the measurement equation</p>
+<section id="why-do-we-need-em" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="why-do-we-need-em"><span class="header-section-number">5.1</span> Why do we need EM?</h3>
+<p>Let’s work with a scalar version of the income process. Recall</p>
+<p><span class="math display">\[
+\underbrace{y_t}_{\text{Observed earnings}}
+=
+\underbrace{z_t}_{\text{Persistent component}}
++
+\underbrace{\omega_t}_{\text{Temporary shock}}
+\]</span></p>
+<p>and the persistent component evolves to</p>
+<p><span class="math display">\[
+z_t=Fz_{t-1}+\nu_t
+\]</span></p>
+<p>where <span class="math inline">\(F\)</span> measures persistence, <span class="math inline">\(\nu_t\)</span> is a persistence earnings shock with variance <span class="math inline">\(Q\)</span> and <span class="math inline">\(\omega_t\)</span> is a temporary earnings shock with variance <span class="math inline">\(R\)</span>.</p>
+<p>There are two problems</p>
+<ol type="1">
+<li><p>We observe <span class="math inline">\(y_t\)</span> but not <span class="math inline">\(z_t\)</span>. We need to recover the unobserved persistent component.</p></li>
+<li><p>We don’t know <span class="math inline">\(\theta = \{F, R, Q\}\)</span> which govern the income process.</p></li>
+</ol>
+<p>These problems are interdependent. The Kalman smoother estimates the latent earnings path <em>given the parameters</em>, while estimating the parameters would be straightforward if we observed that latent path.</p>
+<p><strong>EM provides a way to alternate between these two problems.</strong></p>
+<p>For example, suppose we somehow observed the entire persistent earnings series <span class="math inline">\(z_1, ..., z_T\)</span> rather than just total earnings <span class="math inline">\(y_1, ..., y_T\)</span>. Given</p>
+<p><span class="math display">\[
+z_t = F z_{t-1} + \nu_t
+\]</span></p>
+<p>we could just estimate <span class="math inline">\(F\)</span> using OLS! But, our actual model is</p>
 <p><span class="math display">\[
 \begin{aligned}
-y_{it} = z_{it} + \omega_{it}, &amp; \quad &amp; \omega \sim N(0,R)
+y_t &amp;= z_t+\omega_t\\
+z_t &amp;= Fz_{t-1}+\nu_t
 \end{aligned}
 \]</span></p>
-<p>for employed observations. The relevant squared residual is therefore</p>
+<p>Using a bit of algebra we can express <span class="math inline">\(y_t\)</span> excluding persistent income.</p>
 <p><span class="math display">\[
-(y_{it} - z_{it})^2
+\begin{aligned}
+y_t &amp;= z_t + \omega_t  \rightarrow \\
+y_t &amp;= F z_{t-1} + \nu_t + \omega_t \rightarrow \\
+y_{t-1} &amp;= z_{t-1} + \omega_{t-1} \rightarrow \\
+z_{t-1} &amp;= y_{t-1} - \omega_{t-1} \rightarrow \\
+y_t &amp;= F y_{t-1} - F\omega_{t-1} + \nu_t + \omega_t
+\end{aligned}
 \]</span></p>
-<p>But <span class="math inline">\(z_{it}\)</span> is latent. EM therefore asks us to calculate</p>
+<p>Now let <span class="math inline">\(u_t = \nu_t + \omega_t - F \omega_{t-1}\)</span>. Then we get</p>
 <p><span class="math display">\[
-E[(y_{it} - z_{it})^2 | Y]
+y_t = F y_{t-1} + u_t
 \]</span></p>
-<p>The key identity to solve this is</p>
+<p>Recall that OLS requires that the regressors are uncorrelated with the error term. But clearly this is violated if <span class="math inline">\(u_t\)</span> and <span class="math inline">\(y_{t-1}\)</span> both contain <span class="math inline">\(\omega_{t-1}\)</span>.</p>
 <p><span class="math display">\[
-E[(y_{it} - z_{it})^2 | Y] = (y_{it} - E[z_{i,t}|Y])^2 + \text{Var}(z_{i,t}|Y)
+\operatorname{Cov}(z_{t-1}+ \omega_{t-1}, \nu_t + \omega_t - F \omega_{t-1})
 \]</span></p>
-<p>Our Kalman smoother produces both of these objects. <span class="math inline">\(E[z_{it}|Y]\)</span> is the smoothed, contemporaneous state estimate <span class="math inline">\(\hat{\zeta}_{i,t|T}[1]\)</span> (e.g., the first value in the vector) and <span class="math inline">\(\text{Var}(z_{it}|Y)\)</span> is the smoothed, contemporaneous state error covariance <span class="math inline">\(M_{i,t|T}[1,1]\)</span>.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ks <span class="ot">=</span> <span class="fu">kalman_smoother</span>(<span class="at">df =</span> df, <span class="at">F_mat =</span> F_mat, <span class="at">zeta_0 =</span> zeta_0, <span class="at">M_0 =</span> M_0, <span class="at">R =</span> R)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>R_new <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">X =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(ks),</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">FUN =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    (df[x,<span class="st">&#39;y_t&#39;</span>] <span class="sc">-</span> ks[[x]]<span class="sc">$</span>zeta_smooth[<span class="dv">1</span>])<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> ks[[x]]<span class="sc">$</span>M_smooth[<span class="dv">1</span>,<span class="dv">1</span>] </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>)), <span class="at">na.rm =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
+<p>Using the linearity of covariance:</p>
+<p><span class="math display">\[
+\begin{aligned}
+&amp;=\operatorname{Cov}(z_{t-1},\nu_t)\\
+&amp;\quad+\operatorname{Cov}(z_{t-1},\omega_t)\\
+&amp;\quad-F\operatorname{Cov}(z_{t-1},\omega_{t-1})\\
+&amp;\quad+\operatorname{Cov}(\omega_{t-1},\nu_t)\\
+&amp;\quad+\operatorname{Cov}(\omega_{t-1},\omega_t)\\
+&amp;\quad-F\operatorname{Var}(\omega_{t-1})
+\end{aligned}
+\]</span></p>
+<p>Under our independence assumption (e.g., that <span class="math inline">\(\nu_t\)</span> and <span class="math inline">\(\omega_t\)</span> are mutually independent across time and from one another) and that <span class="math inline">\(F &gt; 0\)</span>, the first five terms are 0 and</p>
+<p><span class="math display">\[
+\operatorname{Cov}(y_{t-1},u_t)
+=-F\operatorname{Var}(\omega_{t-1})&lt;0
+\]</span></p>
+<p>So using OLS with observed earnings would violate the regressor-error orthogonality condition and, because <span class="math inline">\(F &gt; 0\)</span>, we would underestimate <span class="math inline">\(F\)</span> in this regression.</p>
+<p>This is where Shumway and Stoffer (1982) make their contribution: they show that we can work with the conditional expectations of the unobserved quantities rather than pretending we observe them.</p>
+</section>
+<section id="estimating-f-with-em" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="estimating-f-with-em"><span class="header-section-number">5.2</span> Estimating <span class="math inline">\(F\)</span> with EM</h3>
+<p>If we observed <span class="math inline">\(z_1, ..., z_T\)</span>, then our persistence parameter would just be</p>
+<p><span class="math display">\[
+\hat{F} = (z_{t-1}&#39;z_{t-1})^{-1} z_{t-1}&#39;z_t
+\]</span></p>
+<p>OLS provides us the estimate of <span class="math inline">\(F\)</span> which minimizes the sum of squared residuals.</p>
+<p>But given that what we actually have are information about the conditional distributions for <span class="math inline">\(z_1, ..., z_T\)</span> EM minimizes its <strong>conditional expectation</strong>.</p>
+<p><span class="math display">\[
+\min_F E[ \sum_{t=2}^T (z_t - F z_{t-1})^2 | Y_T, \theta^k]
+\]</span></p>
+<p>where <span class="math inline">\(\theta^k\)</span> represents our current parameter guesses. We hold those guesses fixed when calculating the conditional expectation, then choose a new <span class="math inline">\(F\)</span> to minimize it. We aren’t pretending the smoothed state estimates are true states, instead we’re averaging the squared residuals over the uncertainty about the states. If we expand that squared residual and differentiate with respect to <span class="math inline">\(F\)</span> we obtain</p>
+<p><span class="math display">\[
+\begin{aligned}
+E [\sum_{t=2}^T
+z_t^2 - 2 z_t F z_{t-1} + F^2 z_{t-1}^2 | Y_T, \theta^k ] \rightarrow  \\
+E[\sum z_t^2 | Y_T, \theta^k] - 2F E[ \sum z_t z_{t-1}|Y_T, \theta^k] + F^2 E[\sum z_{t-1}^2 | Y_T, \theta^k]
+\end{aligned}
+\]</span></p>
+<p>Let’s simplify the notation by defining</p>
+<p><span class="math display">\[
+\begin{aligned}
+A &amp;= E\left[\sum_{t=2}^T z_t^2\mid Y_T,\theta^{(k)}\right]\\
+B &amp;= E\left[\sum_{t=2}^T z_tz_{t-1}\mid Y_T,\theta^{(k)}\right]\\
+C &amp;= E\left[\sum_{t=2}^T z_{t-1}^2\mid Y_T,\theta^{(k)}\right]
+\end{aligned}
+\]</span></p>
+<p>This gives us</p>
+<p><span class="math display">\[
+G(F) = A - 2FB + F^2 C
+\]</span></p>
+<p>Differentiating wrt to F and solving for the minimum, we find</p>
+<p><span class="math display">\[
+\begin{aligned}
+\frac{\partial G}{\partial F} &amp;= -2B + 2FC = 0  \\
+FC &amp;= B  \\
+F &amp;= B / C \\
+F^{k+1} &amp;= \frac{E\left[\sum_{t=2}^T z_tz_{t-1}|Y_T,\theta^k\right]}{E\left[\sum_{t=2}^T z_{t-1}^2\mid Y_T,\theta^{(k)}\right]}
+\end{aligned}
+\]</span></p>
+<p>Now let’s connect this back to the Kalman smoother. Our smoother provides us with</p>
+<p><span class="math display">\[
+\begin{aligned}
+E[z_t|Y_T, \theta^k] = \hat{z}_{t|T}, \\
+E[z_{t-1}|Y_T, \theta^k] = \hat{z}_{t-1|T}
+\end{aligned}
+\]</span></p>
+<p>To bridge these objects to the numerator and denominator of our EM estimate of <span class="math inline">\(F\)</span> we need to recall the covariance identity:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{Cov}(XY) &amp;= E[XY] - E[X]E[Y] \rightarrow \\
+E[XY] &amp;= \text{Cov}(XY) + E[X]E[Y]
+\end{aligned}
+\]</span></p>
+<p>and the <em>variance identity</em></p>
+<p><span class="math display">\[
+\text{Var}(X) = E[X^2] - E[X]^2
+\]</span></p>
+<p>Substituting our notation, the numerator of our EM estimate for <span class="math inline">\(F\)</span> is</p>
+<p><span class="math display">\[
+\begin{aligned}
+E[z_t z_{t-1} |Y_T, \theta^k] &amp;= \text{Cov}(z_t, z_{t-1} | Y_T, \theta^k) + E[z_t|Y_T, \theta^k] E[z_{t-1}|Y_T, \theta^k]  \\
+&amp;= M_{t|T}[1,2] + \hat{z}_{t|T} \hat{z}_{t-1|T}
+\end{aligned}
+\]</span></p>
+<p>and the denominator of our EM estimate for <span class="math inline">\(F\)</span> is</p>
+<p><span class="math display">\[
+\begin{aligned}
+E[z_{t-1}^2|Y_T,\theta^k] &amp;= \text{Var}(z_{t-1}|Y_T, \theta^k) + E[z_{t-1}|Y_T, \theta^k]^2
+\\
+&amp;= M_{t|T}[2,2] + (\hat{z}_{t-1|T})^2
+\end{aligned}
+\]</span></p>
+<p>providing us with the complete Expectation-Maximization update for <span class="math inline">\(F\)</span></p>
+<p><span class="math display">\[
+\boxed{F^{k+1} = \frac{M_{t|T}[1,2] + \hat{z}_{t|T} \hat{z}_{t-1|T}}{M_{t|T}[2,2] + (\hat{z}_{t-1|T})^2}}
+\]</span></p>
+<p>*Recall that <span class="math inline">\(M_{t|T}\)</span> is the conditional variance-covariance matrix of <span class="math inline">\(z_t\)</span> and <span class="math inline">\(z_{t-1}\)</span></p>
+</section>
+<section id="estimating-f-in-braxton-et-al" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="estimating-f-in-braxton-et-al"><span class="header-section-number">5.3</span> Estimating <span class="math inline">\(F\)</span> in Braxton et al</h3>
+<p>Now that we’ve derived the simple update for <span class="math inline">\(F\)</span>, we can take a look at Braxton et al’s actual state equation and extend what we’ve discussed to cover their model.</p>
+<p>The state equation is</p>
+<p><span class="math display">\[
+z_{it} = F z_{i,t-1} + B^E l_{it}^E + B^U l_{it}^U + \nu_{it}
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+\operatorname{Var}(\nu_{it}\mid l_{it})=
+\begin{cases}
+Q^E &amp; \text{if employed}\\
+Q^U &amp; \text{if unemployed}
+\end{cases}
+\]</span></p>
+<p>In the section above, we minimized the expected sum of squared residuals. But in Braxton et al, the residuals will exclude employment-specific drift and the variance of those residuals differs by employment status.</p>
+<p>We would first need to modify the original least-squares object function to account for the choice to model employed and unemployed observations have different shock variances and that the authors estimate common parameters using the pooled (individual) sample:</p>
+<p><span class="math display">\[
+\min_{F,B^E,B^U} E [\sum_i \sum_t \frac{(z_{it} - F z_{i,t-1} - B^E l_{it}^E - B^U l_{it}^U)^2}{Q(l_{it})}  \mid Y_T, \theta^k]
+\]</span></p>
+<p>The denominator of this object illustrates that observations are weighted according to their variance. In practice, the variance of shocks to persistent income for the unemployed are larger and thus receive a smaller weight. The idea here is that values with greater uncertainty are less informative than those with less uncertainty when estimating <span class="math inline">\(F\)</span>,</p>
+</section>
 </section>
 
 </main>
