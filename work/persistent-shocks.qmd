@@ -918,7 +918,13 @@ In the section above, we minimized the expected sum of squared residuals. But in
 We would first need to modify the original least-squares object function to account for the choice to model employed and unemployed observations have different shock variances and that the authors estimate common parameters using the pooled (individual) sample:
 
 $$
-\min_{F,B^E,B^U} E [\sum_i \sum_t \frac{(z_{it} - F z_{i,t-1} - B^E l_{it}^E - B^U l_{it}^U)^2}{Q(l_{it})}  \mid Y_T, \theta^k]
+\min_{F,B^E,B^U} E \left[ \sum_i \sum_t \frac{(z_{it} - F z_{i,t-1} - B^E l_{it}^E - B^U l_{it}^U)^2}{Q(l_{it})}  \mid Y_T, \theta^k \right]
 $$
 
 The denominator of this object illustrates that observations are weighted according to their variance. In practice, the variance of shocks to persistent income for the unemployed are larger and thus receive a smaller weight. The idea here is that values with greater uncertainty are less informative than those with less uncertainty when estimating $F$,
+
+$$
+(z_{it}^2 - z_{it} F z_{i,t-1} - z_{it} B^E l_{it}^E - z_{it} B^U l_{it}^U) + \\
+(-F z_{i,t-1} z_{it} + F^2 z_{i,t-1}^2 + F z_{i,t-1} B_{it}) + \\
+...
+$$
