@@ -1183,8 +1183,14 @@ $$
 
 
 
+### Updating the parameters
 
+For the transition model we’ve been deriving, try a value of \(F\), compute the best \(B^U\) for that \(F\), then compute the best \(Q^U\) for that pair. Do the same for the employed group. That gives you the best transition log-likelihood you can achieve at that particular \(F\).
 
+The order within one M-step is:
+1. Try a candidate \(F\). Compute \(B^U(F)\) and \(B^E(F)\) by making the average signed residual zero in each group. You can do this before knowing the variances because, within each group, the variance scales every squared residual by the same amount.
+2. Compute \(Q^U(F)\) and \(Q^E(F)\). With the intercepts set, each variance is the average expected squared residual for its group.
+3. Score that \(F\). Plug all four values back into the expected transition log-likelihood. Search over \(F\) and keep the value with the highest combined score.
 
 
 ### Still working (ignore)

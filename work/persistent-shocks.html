@@ -4889,7 +4889,8 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">7.1</span> Overview</a></li>
   <li><a href="#walkthrough" id="toc-walkthrough" class="nav-link" data-scroll-target="#walkthrough"><span class="header-section-number">7.2</span> Walkthrough</a></li>
-  <li><a href="#still-working-ignore" id="toc-still-working-ignore" class="nav-link" data-scroll-target="#still-working-ignore"><span class="header-section-number">7.3</span> Still working (ignore)</a></li>
+  <li><a href="#updating-the-parameters" id="toc-updating-the-parameters" class="nav-link" data-scroll-target="#updating-the-parameters"><span class="header-section-number">7.3</span> Updating the parameters</a></li>
+  <li><a href="#still-working-ignore" id="toc-still-working-ignore" class="nav-link" data-scroll-target="#still-working-ignore"><span class="header-section-number">7.4</span> Still working (ignore)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -5553,8 +5554,8 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">caption =</span> <span class="st">&#39;Fake dataset&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-75ded0cfe47c8914728a" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-75ded0cfe47c8914728a">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-0e2f3a436fbaade7916f" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-0e2f3a436fbaade7916f">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <p>The purpose of the paper is to estimate the persistent income component of the individual using the observed and unobserved periods.</p>
@@ -5916,8 +5917,13 @@ f(z_{it} | z_{i,t-1}; F, Q^U, B^U) = \frac{1}{\sqrt{2 \pi Q^U}} \exp( - \frac{(z
 \mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U}
 \]</span></p>
 </section>
-<section id="still-working-ignore" class="level3" data-number="7.3">
-<h3 data-number="7.3" class="anchored" data-anchor-id="still-working-ignore"><span class="header-section-number">7.3</span> Still working (ignore)</h3>
+<section id="updating-the-parameters" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="updating-the-parameters"><span class="header-section-number">7.3</span> Updating the parameters</h3>
+<p>For the transition model we’ve been deriving, try a value of (F), compute the best (B^U) for that (F), then compute the best (Q^U) for that pair. Do the same for the employed group. That gives you the best transition log-likelihood you can achieve at that particular (F).</p>
+<p>The order within one M-step is: 1. Try a candidate (F). Compute (B^U(F)) and (B^E(F)) by making the average signed residual zero in each group. You can do this before knowing the variances because, within each group, the variance scales every squared residual by the same amount. 2. Compute (Q^U(F)) and (Q^E(F)). With the intercepts set, each variance is the average expected squared residual for its group. 3. Score that (F). Plug all four values back into the expected transition log-likelihood. Search over (F) and keep the value with the highest combined score.</p>
+</section>
+<section id="still-working-ignore" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="still-working-ignore"><span class="header-section-number">7.4</span> Still working (ignore)</h3>
 <p>Now suppose the same worker is employed in period <span class="math inline">\(t\)</span>. We can think of this employed worker’s earnings as being generated in two steps.</p>
 <ol type="1">
 <li>Persistent earnings evolve. So given last year’s persistent earnings, the model generates this year’s persistent earnings. The transition density is:</li>
