@@ -29,6 +29,219 @@ df = cbind(
 
 ```
 
+## Understanding the Standard Kalman Filter
+
+### Setup
+
+Suppose we have a room whose temperature changes over time. We take one thermometer reading every minute. We have two sources of uncertainty: 
+
+1. *Process noise*: The room's actual temperature can change unpredictably because of airflow, heating, sunlight, etc. 
+
+2. *Measurement noise*: Our thermometer doesn't perfectly measure the true temperature. 
+
+Let $x_t$ be the true temperature at minute $t$, $y_t$ the thermometer reading at minute $t$, $\eta_t$ the random change in true temperature, and $\epsilon_t$ the thermometer measurement error. Our model/state equation is: 
+
+$$
+x_t = x_{t-1} + \eta_t, \eta_t \sim N(0, Q)
+$$
+
+and a measurement equation: 
+
+$$
+y_t = x_t + \epsilon_t, \space \epsilon_t \sim N(0,R)
+$$
+
+The standard Kalman filter assumes the disturbances $\eta, \epsilon$ are
+
+- mutually independent  
+- serially independent    
+- independent of the initial state  
+
+Let $Y_t = \{y_1, ..., y_t\}$
+
+We want to derive two quantities: 
+
+1. The *a priori* predicted state 
+
+$$
+\hat{x}_{t|t-1}=E[x_t\mid Y_{t-1}]
+$$
+
+2. The filtered (*a posteriori*) state (after observing $y_t$)
+
+$$
+\hat{x}_{t|t} = E[x_t | Y_{t}]
+$$
+
+Their conditional error variances are: 
+
+$$
+P_{t|t-1} = \text{Var}(x_t | Y_{t-1})
+$$
+
+$$
+P_{t|t} = \text{Var}(x_t | Y_{t})
+$$
+
+### Deriving the *A Priori Prediction*
+
+We can derive the prediction by first starting with the state equation
+
+$$
+x_t = x_{t-1} + \eta_t
+$$
+
+Taking the conditional expectation
+
+$$
+\begin{aligned}
+E[x_t\mid Y_{t-1}]
+&=
+E[x_{t-1}+\eta_t\mid Y_{t-1}] \\ 
+&= E[x_{t-1} | Y_{t-1}] + 0 \\ 
+&= E[x_{t-1}| Y_{t-1}].
+\end{aligned}
+$$
+
+To derive the *a priori* prediction variance we can also use the state equation
+
+$$
+\begin{aligned}
+\text{Var}(x_t | Y_{t-1}) &= \text{Var}(x_{t-1} + \eta_t | Y_{t-1}) \\ 
+&= 
+\text{Var}(x_{t-1} | Y_{t-1}) + \text{Var}(\eta_t | Y_{t-1}) + 2 \text{Cov}(x_{t-1}, \eta_{t} | Y_{t-1}) \\ 
+&= P_{t-1|t-1} + Q.
+\end{aligned}
+$$
+
+We've now derived both **prediction equations**
+
+$$
+\boxed{
+\begin{aligned}
+\hat{x}_{t|t-1} &= \hat{x}_{t-1|t-1} \\ 
+P_{t|t-1} &= P_{t-1|t-1} + Q
+\end{aligned}
+}
+$$
+
+Next, we need a way to incorporate information from new measurements -- when we read the thermometer again in a minute. 
+
+### Deriving the Kalman Gain and *A Posteriori* Prediction
+
+We observe $y_t$. We define the innovation as
+
+$$
+\nu_t = y_t - \hat{x}_{t|t-1}
+$$
+
+We can derive the conditional expectation of this term to show that it is 0. 
+
+$$
+\begin{aligned}
+E[\nu_t | Y_{t-1}] &= E[y_t - \hat{x}_{t|t-1} | Y_{t-1}] \\
+&= E[x_t + \epsilon_t - \hat{x}_{t|t-1}  | Y_{t-1}] \\
+&= E[x_t | Y_{t-1}] - \hat{x}_{t|t-1} \\
+&= \hat{x}_{t|t-1}- \hat{x}_{t|t-1} \\ 
+&= 0
+\end{aligned}
+$$
+
+And also find its variance 
+
+$$
+\begin{aligned}
+\text{Var}(\nu_t | Y_{t-1}) &= \text{Var}(x_t + \epsilon_t - \hat{x}_{t|t-1} | Y_{t-1}) \\ 
+&= \text{Var}(x_t | Y_{t-1}) + \text{Var}(\epsilon_t | Y_{t-1}) + 2 \text{Cov}(x_t, \epsilon_t | Y_{t-1}) \\ 
+&= P_{t|t-1} + R
+\end{aligned}
+$$
+
+and finally, its covariance with the state 
+
+:::{.callout-note}
+The derivation below requires us to recall that
+
+$$
+\text{Var}(X) + E[X]^2 = E[X^2]
+$$
+
+and 
+
+$$
+E[XY]  = \text{Cov}(XY) + E[X]E[Y]
+$$
+:::
+
+::: {style="overflow-x: auto; overflow-y: hidden;"}
+
+$$
+\begin{aligned}
+\text{Cov}(x_t, \nu_t | Y_{t-1}) &= E[x_t \nu_t | Y_{t-1}] - E[x_t|Y_{t-1}]E[\nu_t|Y_{t-1}] \\ 
+&= E[x_t \nu_t | Y_{t-1}] \\
+&= E[x_t (x_t + \epsilon_t - \hat{x}_{t|t-1})|Y_{t-1}] \\ 
+&= E[x_t^2 + x_t \epsilon_t - x_t \hat{x}_{t|t-1} | Y_{t-1}] \\ 
+&= E[x_t^2 | Y_{t-1}] - E[x_t \epsilon_t | Y_{t-1}] - \hat{x}_{t|t-1}^2 \\ 
+&= \underbrace{\text{Var}(x_t | Y_{t-1}) + E[x_t|Y_{t-1}]^2}_{E[x_t^2 | Y_{t-1}]} - \underbrace{\text{Cov}(x_t, \epsilon_t | Y_{t-1}) - E[x_t | Y_{t-1}]  E[\epsilon_t | Y_{t-1}]}_{E[x_t \epsilon_t | Y_{t-1}]} - \hat{x}_{t|t-1}^2 \\ 
+&= P_{t|t-1} + \hat{x}_{t|t-1}^2 + 0 -0 + 0- \hat{x}_{t|t-1}^2 \\ 
+&= P_{t|t-1}
+\end{aligned}
+$$
+
+:::
+
+
+:::{.callout-note}
+
+Recall the conditional expectation formula for jointly Gaussian variables is: 
+
+$$
+E[X\mid Z]
+=
+E[X]+\frac{\operatorname{Cov}(X,Z)}{\operatorname{Var}(Z)}(Z-E[Z])
+$$
+
+:::
+
+Substituting $X = x_t$ and $Z = \nu_t$ into the conditional expectation expression above
+
+$$
+\begin{aligned}
+E[x_t | \nu_t , Y_{t-1}]
+&=
+E[x_t | Y_{t-1}]+\frac{\operatorname{Cov}(x_t,\nu_t | Y_{t-1})}{\operatorname{Var}(\nu_t|Y_{t-1})}(\nu_t-E[\nu_t | Y_{t-1}]) \\ 
+&= \hat{x}_{t | t-1} + \underbrace{\frac{P_{t|t-1}}{P_{t|t-1} + R}}_{\text{Kalman Gain}, K_t} ( \nu_t) \\ 
+\boxed{\hat{x}_{t|t} = \hat{x}_{t | t-1} + K_t \nu_t}
+\end{aligned}
+$$
+
+Next we need to derive an estimate for our posterior uncertainty. 
+
+:::{.callout-note}
+Recall the conditional variance formula for jointly normal variables is: 
+
+$$
+\text{Var}(X\mid Z)
+=
+\text{Var}(X) - \frac{\operatorname{Cov}(X,Z)^2}{\operatorname{Var}(Z)}
+$$
+:::
+
+
+Substituting $x_t$ for $X$ and $\nu_t$ for $Z$
+
+$$
+\begin{aligned}
+\text{Var}(x_t | \nu_t, Y_{t-1}) &= \text{Var}(x_t | \nu_t, Y_{t-1}) + \frac{\text{Cov}(x_t, \nu_t |  Y_{t-1})}{\text{Var}(\nu_t | Y_{t-1})} \\ 
+&= P_{t|t-1} - \frac{P_{t|t-1}^2}{P_{t|t-1} + R} \\ 
+&= P_{t|t-1} - K_t P_{t|t-1} \\ 
+\boxed{P_{t|t} = P_{t|t-1}(1 - K_t)}
+\end{aligned}
+$$
+
+and we've finished our derivation of the Kalman filter in scalar form! 
+
+
 ## What are we trying to estimate?
 
 Braxton et al. assume that an employed worker's observed earnings consist of two components
@@ -53,7 +266,10 @@ This model illustrates that there are **two sources of uncertainty** when predic
 
 We will define $M_{i, t|t}$ as the *posterior* variance of our uncertainty about today's true persistent earnings, $M_{i, t|t-1}$ as the *prior* variance of our uncertainty about today's true persistent earnings (e.g., before observing today's income for individual *i*). Then we will allow the machinery of the Kalman filter to produce our estimate of persistent income as well as our uncertainty around that latent state.
 
-## Two-state Kalman filter
+
+
+
+## Two-state Kalman filter from Braxton et al
 
 The paper defines the latent state as
 
@@ -893,38 +1109,129 @@ $$
 
 \*Recall that $M_{t|T}$ is the conditional variance-covariance matrix of $z_t$ and $z_{t-1}$ 
 
-### Estimating $F$ in Braxton et al
+## EM in Braxton et al
 
-Now that we've derived the simple update for $F$, we can take a look at Braxton et al's actual state equation and extend what we've discussed to cover their model.
+### Overview
 
-The state equation is
+So far we've used the Kalman filter and smoother to estimate each worker's latent earnings state, taking the parameters like persistence and the shock variances as given. Now we ask how do we estimate those parameters from the earnings histories we actually observe? The filter gives us a way to score any candidate set of parameters by adding up the log predictive densities of its one step ahead earnings forecast. The EM algorithm gives us a way to improve that score. In the E-step, we run the Kalman smoother using the current parameters so that each worker's full earnings history informs what we infer about their latent states. In the M-step, we use those smoothed expectations to update the parameters. We repeat the two steps until the observed-data log-likelihood converges. 
 
-$$
-z_{it} = F z_{i,t-1} + B^E l_{it}^E + B^U l_{it}^U + \nu_{it}
-$$
+### Walkthrough
 
-where
+Suppose a worker is unemployed in a particular year. Their persistent earnings evolve according to 
 
 $$
-\operatorname{Var}(\nu_{it}\mid l_{it})=
-\begin{cases}
-Q^E & \text{if employed}\\
-Q^U & \text{if unemployed}
-\end{cases}
+z_{it} = F z_{i,t-1} + B^U + \nu_{it} \qquad \nu_{it} \sim N(0,Q^U)
 $$
 
-In the section above, we minimized the expected sum of squared residuals. But in Braxton et al, the residuals will exclude employment-specific drift and the variance of those residuals differs by employment status.
-
-We would first need to modify the original least-squares object function to account for the choice to model employed and unemployed observations have different shock variances and that the authors estimate common parameters using the pooled (individual) sample:
+This is the model's prediction for persistent earnings this year and $Q^U$ is the variance of the shock around that prediction. For any candidate values of $F, B^U$, we can define the *transition residual* as the gap between this year's latent persistent earnings and what the transition equation predicts given last year's latent persistent earnings. The E-step we ask how large the *squared residual* is on average across the state pairs the smoother considers plausible. 
 
 $$
-\min_{F,B^E,B^U} E \left[ \sum_i \sum_t \frac{(z_{it} - F z_{i,t-1} - B^E l_{it}^E - B^U l_{it}^U)^2}{Q(l_{it})}  \mid Y_T, \theta^k \right]
+(r^{U}_{it})^2 = (z_{it} - \underbrace{(F z_{i,t-1} + B^U)}_{\text{predicted persistent earnings}})^2
 $$
 
-The denominator of this object illustrates that observations are weighted according to their variance. In practice, the variance of shocks to persistent income for the unemployed are larger and thus receive a smaller weight. The idea here is that values with greater uncertainty are less informative than those with less uncertainty when estimating $F$,
+Our Kalman smoother produces estimates of our latent states. So taking the expectation of this squared residual, we find: 
+
+
+::: {style="overflow-x: auto; overflow-y: hidden;"}
 
 $$
-(z_{it}^2 - z_{it} F z_{i,t-1} - z_{it} B^E l_{it}^E - z_{it} B^U l_{it}^U) + \\
-(-F z_{i,t-1} z_{it} + F^2 z_{i,t-1}^2 + F z_{i,t-1} B_{it}) + \\
-...
+\begin{aligned}
+E_k[(r^{U}_{it})^2] &= E_k[ (z_{it} - F z_{i,t-1} - B^U)^2] \\ 
+&= E_k[z_{it}^2 - 2 F z_{it} z_{i,t-1} - 2 B^U z_{it} + 2 B^U F z_{i,t-1} + F^2 z_{i,t-1}^2 + (B^U)^2] \\
+&= E_k[z_{it}^2] - 2FE_k[z_{it} z_{i,t-1}]- 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 E_k[z_{i,t-1}^2 ] + (B^U)^2 \\ 
+&= (\text{Var}_k(z_{it}) + E_k[z_{it}]^2) -  2F (\text{Cov}_k(z_{it} ,z_{i,t-1}) + E_k[z_{it}] E[z_{i,t-1}]) - 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 (\text{Var}_k(z_{i,t-1}) + E_k[z_{i,t-1}]^2) + (B^U)^2 \\
+&= \boxed{(\mathbb E_k[z_{it}]-F\mathbb E_k[z_{i,t-1}]-B^U\bigr)^2 +\operatorname{Var}_k(z_{it})
++F^2\operatorname{Var}_k(z_{i,t-1})
+-2F\operatorname{Cov}_k(z_{it},z_{i,t-1})}.
+\end{aligned}
 $$
+
+:::
+
+
+:::{.callout-note}
+
+Recall that the conditional normal conditional density function is: 
+
+$$
+f_{Y|X}(y|x) = \frac{1}{\sqrt{2 \pi \sigma^2_{Y|X}}} \exp( - \frac{(y - \mu_{Y|X})^2}{2 \sigma^2_{Y|X}})
+$$
+:::
+
+$$
+f(z_{it} | z_{i,t-1}; F, Q^U, B^U) = \frac{1}{\sqrt{2 \pi Q^U}} \exp( - \frac{(z_{it} - F z_{i,t-1} - B^U)^2}{2 Q^U})
+$$
+
+taking the log-likelihood we get
+
+
+$$
+\begin{aligned}
+\ln(f(z_{it} | z_{i,t-1}; F, Q^U, B^U)) &= \ln(\frac{1}{\sqrt{2 \pi Q^U}})  - \frac{(z_{it} - F z_{i,t-1} - B^U)^2}{2 Q^U} \\
+&= \ln(1) - (0.5)\ln(2 \pi Q^U) - \frac{(z_{it} - F z_{i,t-1} - B^U)^2}{2 Q^U} \\
+&= - .5 \ln(2 \pi) - .5 \ln(Q^U) - \frac{(z_{it} - F z_{i,t-1} - B^U)^2}{2 Q^U} \\ 
+&= - .5 \ln(2 \pi Q^U) - \frac{(r^U_{it})^2}{2 Q^U}
+\end{aligned}
+$$
+
+
+The residual measures the state equation's prediction error. The log-density then scores that miss under the candidate shock variance $Q^U$. However, once again, we need to work with expectations because persistent earnings are latent. So if we take the *expectation* of this log-likelihood, we get (recall that $Q^U$ is fixed):
+
+$$
+\mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U}
+$$
+
+
+
+
+
+
+
+### Still working (ignore)
+
+Now suppose the same worker is employed in period $t$. We can think of this employed worker's earnings as being generated in two steps. 
+
+1. Persistent earnings evolve. So given last year's persistent earnings, the model generates this year's persistent earnings. The transition density is:
+
+$$
+f(z_{it} | z_{i,t-1}; F, Q^E, B^E) = \frac{1}{\sqrt{2 \pi Q^E}} \exp( - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E})
+$$
+
+and its log-likelihood is:
+
+$$
+\ln(f(z_{it} | z_{i,t-1}; F, Q^E, B^E)) = -0.5\ln(2 \pi Q^E)  - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E}
+$$
+
+2. Actual earnings are realized. So given this year's persistent earnings $z_{it}$, a temporary shock pushes actual earnings $y_{it}$ up or down. Think of a one-time bonus. That's $f(y_{it} | z_{it})$.  
+Using the measurement equation $y_{it} = z_{it} + \omega_{it}$ with $\omega_{it} \sim N(0,R)$, we can write the log-likelihood as: 
+
+$$
+f(y_{it} | z_{it}; R) = \frac{1}{\sqrt{2 \pi R}} \exp( - \frac{(y_{it} - z_{it})^2}{2 R})
+$$
+
+and its log-likelihood is: 
+
+$$
+\ln(f(y_{it} | z_{it}; R)) = -0.5 \ln(2 \pi R)  - \frac{(y_{it} - z_{it})^2}{2 R}
+$$
+
+So for an employed period, the complete data log-likelihood contribution is
+
+$$
+\underbrace{\ln f(z_{it}\mid z_{i,t-1};F,Q^E,B^E)}_{\text{state transition}}
++
+\underbrace{\ln f(y_{it}\mid z_{it};R)}_{\text{earnings measurement}}.
+$$
+
+If we could observe $z_{it}$ and $z_{i,t-1}$, we could plug them directly into the state-transition term. But persistent earnings are latent, even in years when we observe actual earnings. So in the E-step, we use the current parameters and the worker's full observed earnings history to infer which pairs $(z_{i,t-1}, z_{it})$ are plausible. We then **average the complete-data log-likelihood over that smoothed distribution**. In the M-step, we hold the smoothed distribution fixed and choose new parameters that maximize this average. 
+
+
+
+
+
+
+
+
+
+
