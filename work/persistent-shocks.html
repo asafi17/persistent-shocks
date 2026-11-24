@@ -4880,7 +4880,7 @@ window.Quarto = {
   <li><a href="#the-algorithm-1" id="toc-the-algorithm-1" class="nav-link" data-scroll-target="#the-algorithm-1"><span class="header-section-number">4.6</span> The algorithm</a></li>
   </ul></li>
   <li><a href="#a-toy-example" id="toc-a-toy-example" class="nav-link" data-scroll-target="#a-toy-example"><span class="header-section-number">5</span> A Toy Example</a></li>
-  <li><a href="#expectation-maximization-em-work-in-progress" id="toc-expectation-maximization-em-work-in-progress" class="nav-link" data-scroll-target="#expectation-maximization-em-work-in-progress"><span class="header-section-number">6</span> Expectation Maximization (EM) [Work in Progress]</a>
+  <li><a href="#an-overview-of-expectation-maximization-em" id="toc-an-overview-of-expectation-maximization-em" class="nav-link" data-scroll-target="#an-overview-of-expectation-maximization-em"><span class="header-section-number">6</span> An Overview of Expectation Maximization (EM)</a>
   <ul class="collapse">
   <li><a href="#why-do-we-need-em" id="toc-why-do-we-need-em" class="nav-link" data-scroll-target="#why-do-we-need-em"><span class="header-section-number">6.1</span> Why do we need EM?</a></li>
   <li><a href="#estimating-f-with-em" id="toc-estimating-f-with-em" class="nav-link" data-scroll-target="#estimating-f-with-em"><span class="header-section-number">6.2</span> Estimating <span class="math inline">\(F\)</span> with EM</a></li>
@@ -4888,9 +4888,15 @@ window.Quarto = {
   <li><a href="#em-in-braxton-et-al" id="toc-em-in-braxton-et-al" class="nav-link" data-scroll-target="#em-in-braxton-et-al"><span class="header-section-number">7</span> EM in Braxton et al</a>
   <ul class="collapse">
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">7.1</span> Overview</a></li>
-  <li><a href="#walkthrough" id="toc-walkthrough" class="nav-link" data-scroll-target="#walkthrough"><span class="header-section-number">7.2</span> Walkthrough</a></li>
-  <li><a href="#updating-the-parameters" id="toc-updating-the-parameters" class="nav-link" data-scroll-target="#updating-the-parameters"><span class="header-section-number">7.3</span> Updating the parameters</a></li>
-  <li><a href="#still-working-ignore" id="toc-still-working-ignore" class="nav-link" data-scroll-target="#still-working-ignore"><span class="header-section-number">7.4</span> Still working (ignore)</a></li>
+  <li><a href="#expectation-of-the-transition-residual-during-e_kr_itu2" id="toc-expectation-of-the-transition-residual-during-e_kr_itu2" class="nav-link" data-scroll-target="#expectation-of-the-transition-residual-during-e_kr_itu2"><span class="header-section-number">7.2</span> Expectation of the transition residual during <span class="math inline">\(E_k[(r_{it}^U)^2]\)</span></a></li>
+  <li><a href="#scoring-the-square-of-the-transition-residual-during-unemployment-with-log-likelihood" id="toc-scoring-the-square-of-the-transition-residual-during-unemployment-with-log-likelihood" class="nav-link" data-scroll-target="#scoring-the-square-of-the-transition-residual-during-unemployment-with-log-likelihood"><span class="header-section-number">7.3</span> Scoring the square of the transition residual during unemployment with log-likelihood</a></li>
+  <li><a href="#expectation-of-the-transition-residual-during-employment-e_kr_ite2" id="toc-expectation-of-the-transition-residual-during-employment-e_kr_ite2" class="nav-link" data-scroll-target="#expectation-of-the-transition-residual-during-employment-e_kr_ite2"><span class="header-section-number">7.4</span> Expectation of the transition residual during employment <span class="math inline">\(E_k[(r_{it}^E)^2]\)</span></a></li>
+  <li><a href="#scoring-the-square-of-the-transition-residual-during-employment-with-log-likelihood" id="toc-scoring-the-square-of-the-transition-residual-during-employment-with-log-likelihood" class="nav-link" data-scroll-target="#scoring-the-square-of-the-transition-residual-during-employment-with-log-likelihood"><span class="header-section-number">7.5</span> Scoring the square of the transition residual during employment with log-likelihood</a></li>
+  <li><a href="#the-combined-objective-function" id="toc-the-combined-objective-function" class="nav-link" data-scroll-target="#the-combined-objective-function"><span class="header-section-number">7.6</span> The combined objective function</a></li>
+  <li><a href="#updating-the-persistence-parameter-widehat-f" id="toc-updating-the-persistence-parameter-widehat-f" class="nav-link" data-scroll-target="#updating-the-persistence-parameter-widehat-f"><span class="header-section-number">7.7</span> Updating the persistence parameter <span class="math inline">\(\widehat F\)</span></a></li>
+  <li><a href="#updating-variance-parameters-widehatqu-widehat-qe" id="toc-updating-variance-parameters-widehatqu-widehat-qe" class="nav-link" data-scroll-target="#updating-variance-parameters-widehatqu-widehat-qe"><span class="header-section-number">7.8</span> Updating variance parameters: <span class="math inline">\(\widehat{Q}^U, \widehat Q^E\)</span></a></li>
+  <li><a href="#updating-intercept-parameters-widehatbu-widehat-be" id="toc-updating-intercept-parameters-widehatbu-widehat-be" class="nav-link" data-scroll-target="#updating-intercept-parameters-widehatbu-widehat-be"><span class="header-section-number">7.9</span> Updating intercept parameters: <span class="math inline">\(\widehat{B}^U, \widehat B^E\)</span></a></li>
+  <li><a href="#the-recipe" id="toc-the-recipe" class="nav-link" data-scroll-target="#the-recipe"><span class="header-section-number">7.10</span> The recipe</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -5554,8 +5560,8 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">caption =</span> <span class="st">&#39;Fake dataset&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-0e2f3a436fbaade7916f" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-0e2f3a436fbaade7916f">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-27d48f25d37aad2e8bea" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-27d48f25d37aad2e8bea">{"x":{"filter":"none","vertical":false,"caption":"<caption>Fake dataset<\/caption>","data":[[1,2,3,4,5],[1,1,0,1,1],[0,0,1,0,0],[0.25,0.42,null,0.1,0.3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>t<\/th>\n      <th>lE<\/th>\n      <th>lU<\/th>\n      <th>y_t<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[0,1,2,3]},{"name":"t","targets":0},{"name":"lE","targets":1},{"name":"lU","targets":2},{"name":"y_t","targets":3}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <p>The purpose of the paper is to estimate the persistent income component of the individual using the observed and unobserved periods.</p>
@@ -5666,13 +5672,13 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 <span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> type</span>
 <span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(</span>
-<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> \(d) d <span class="sc">|&gt;</span> <span class="fu">filter</span>(type <span class="sc">!=</span> <span class="st">&quot;observed&quot;</span>),</span>
-<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">ymin =</span> lower95, <span class="at">ymax =</span> upper95),</span>
-<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.25</span>,</span>
-<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="cn">NA</span>,</span>
-<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_ribbon</span>(</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> final <span class="sc">|&gt;</span> <span class="fu">filter</span>(type <span class="sc">!=</span> <span class="st">&quot;observed&quot;</span>),</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">ymin =</span> lower95, <span class="at">ymax =</span> upper95),</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.25</span>,</span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>  <span class="at">colour =</span> <span class="cn">NA</span>,</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>  <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
 <span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
 <span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linetype_manual</span>(</span>
@@ -5702,8 +5708,8 @@ e_{it}^s e_{it}^{s&#39;} = (\zeta_{it} - \hat{\zeta}_{i,t|t} - J_{it} \zeta_{i,t
 </div>
 <p>This works as expected! The Kalman smoother reduced our uncertainty around the persistent income state as evidenced by the thinner 95% confidence band. During unemployment <span class="math inline">\(t=3\)</span>, the smoother incorporates information from periods 4 and 5 to revise the state downward during unemployment relative to the posterior and upward at period 4 because period 5’s observed earnings were quite high. The smoothed estimate is <em>not</em> always closest to observed income. In the terminal period, the smoother and the posterior agree because there are no future observations remaining. The smoother’s uncertainty reduction is really noticeable during the unemployment period. This is because the filter cannot update the state uncertainty estimate using an observation during this period – there’s no income to observe. So we just add uncertainty from period 2 to 3 from the new prediction. The smoother on the other hand can incorporate observed earnings in future periods to reduce uncertainty about the state in period 3.</p>
 </section>
-<section id="expectation-maximization-em-work-in-progress" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="expectation-maximization-em-work-in-progress"><span class="header-section-number">6</span> Expectation Maximization (EM) [Work in Progress]</h2>
+<section id="an-overview-of-expectation-maximization-em" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="an-overview-of-expectation-maximization-em"><span class="header-section-number">6</span> An Overview of Expectation Maximization (EM)</h2>
 <section id="why-do-we-need-em" class="level3" data-number="6.1">
 <h3 data-number="6.1" class="anchored" data-anchor-id="why-do-we-need-em"><span class="header-section-number">6.1</span> Why do we need EM?</h3>
 <p>Let’s work with a scalar version of the income process. Recall</p>
@@ -5860,8 +5866,8 @@ E[z_{t-1}^2|Y_T,\theta^k] &amp;= \text{Var}(z_{t-1}|Y_T, \theta^k) + E[z_{t-1}|Y
 <h3 data-number="7.1" class="anchored" data-anchor-id="overview"><span class="header-section-number">7.1</span> Overview</h3>
 <p>So far we’ve used the Kalman filter and smoother to estimate each worker’s latent earnings state, taking the parameters like persistence and the shock variances as given. Now we ask how do we estimate those parameters from the earnings histories we actually observe? The filter gives us a way to score any candidate set of parameters by adding up the log predictive densities of its one step ahead earnings forecast. The EM algorithm gives us a way to improve that score. In the E-step, we run the Kalman smoother using the current parameters so that each worker’s full earnings history informs what we infer about their latent states. In the M-step, we use those smoothed expectations to update the parameters. We repeat the two steps until the observed-data log-likelihood converges.</p>
 </section>
-<section id="walkthrough" class="level3" data-number="7.2">
-<h3 data-number="7.2" class="anchored" data-anchor-id="walkthrough"><span class="header-section-number">7.2</span> Walkthrough</h3>
+<section id="expectation-of-the-transition-residual-during-e_kr_itu2" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="expectation-of-the-transition-residual-during-e_kr_itu2"><span class="header-section-number">7.2</span> Expectation of the transition residual during <span class="math inline">\(E_k[(r_{it}^U)^2]\)</span></h3>
 <p>Suppose a worker is unemployed in a particular year. Their persistent earnings evolve according to</p>
 <p><span class="math display">\[
 z_{it} = F z_{i,t-1} + B^U + \nu_{it} \qquad \nu_{it} \sim N(0,Q^U)
@@ -5877,13 +5883,17 @@ z_{it} = F z_{i,t-1} + B^U + \nu_{it} \qquad \nu_{it} \sim N(0,Q^U)
 E_k[(r^{U}_{it})^2] &amp;= E_k[ (z_{it} - F z_{i,t-1} - B^U)^2] \\
 &amp;= E_k[z_{it}^2 - 2 F z_{it} z_{i,t-1} - 2 B^U z_{it} + 2 B^U F z_{i,t-1} + F^2 z_{i,t-1}^2 + (B^U)^2] \\
 &amp;= E_k[z_{it}^2] - 2FE_k[z_{it} z_{i,t-1}]- 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 E_k[z_{i,t-1}^2 ] + (B^U)^2 \\
-&amp;= (\text{Var}_k(z_{it}) + E_k[z_{it}]^2) -  2F (\text{Cov}_k(z_{it} ,z_{i,t-1}) + E_k[z_{it}] E[z_{i,t-1}]) - 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 (\text{Var}_k(z_{i,t-1}) + E_k[z_{i,t-1}]^2) + (B^U)^2 \\
-&amp;= \boxed{(\mathbb E_k[z_{it}]-F\mathbb E_k[z_{i,t-1}]-B^U\bigr)^2 +\operatorname{Var}_k(z_{it})
+&amp;= (\text{Var}_k(z_{it}) + E_k[z_{it}]^2) -  2F (\text{Cov}_k(z_{it} ,z_{i,t-1}) + E_k[z_{it}] E_k[z_{i,t-1}]) - 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 (\text{Var}_k(z_{i,t-1}) + E_k[z_{i,t-1}]^2) + (B^U)^2 \\
+&amp;= (\mathbb E_k[z_{it}]-F\mathbb E_k[z_{i,t-1}]-B^U\bigr)^2 +\operatorname{Var}_k(z_{it})
 +F^2\operatorname{Var}_k(z_{i,t-1})
--2F\operatorname{Cov}_k(z_{it},z_{i,t-1})}.
+-2F\operatorname{Cov}_k(z_{it},z_{i,t-1}) \\
+&amp;= \boxed{(\hat{z}_{it|T} - F \hat{z}_{i,t-1|T} - B^U)^2 + M_{it|T}[1,1] + F^2 M_{it|T}[2,2] -2FM_{it|T}[1,2]}
 \end{aligned}
 \]</span></p>
 </div>
+</section>
+<section id="scoring-the-square-of-the-transition-residual-during-unemployment-with-log-likelihood" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="scoring-the-square-of-the-transition-residual-during-unemployment-with-log-likelihood"><span class="header-section-number">7.3</span> Scoring the square of the transition residual during unemployment with log-likelihood</h3>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -5914,45 +5924,198 @@ f(z_{it} | z_{i,t-1}; F, Q^U, B^U) = \frac{1}{\sqrt{2 \pi Q^U}} \exp( - \frac{(z
 \]</span></p>
 <p>The residual measures the state equation’s prediction error. The log-density then scores that miss under the candidate shock variance <span class="math inline">\(Q^U\)</span>. However, once again, we need to work with expectations because persistent earnings are latent. So if we take the <em>expectation</em> of this log-likelihood, we get (recall that <span class="math inline">\(Q^U\)</span> is fixed):</p>
 <p><span class="math display">\[
-\mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U}
+\mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U} \\
+\]</span></p>
+<p>Next, let <span class="math inline">\(U\)</span> be the set of worker-year transitions in which the worker is unemployed in year <span class="math inline">\(t\)</span>, and let <span class="math inline">\(N_U\)</span> be the number of those transitions. Adding their expected log-density contribution gives:</p>
+<p><span class="math display">\[
+\sum_{(i,t)\in U}
+\mathbb E_k[\ln f_\theta(z_{it}\mid z_{i,t-1})]
+=
+-\frac{N_U}{2}\ln(2\pi Q^U)
+-\frac{1}{2Q^U}
+\sum_{(i,t)\in U}\mathbb E_k[(r^U_{it})^2].
+\]</span></p>
+<p>where the expectation averages over plausible latent state pairs within each transition. Let <span class="math inline">\(S_U =  \sum_{(i,t)\in U}\mathbb E_k[(r^U_{it})^2]\)</span>. The sum adds those contributions across transitions.</p>
+</section>
+<section id="expectation-of-the-transition-residual-during-employment-e_kr_ite2" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="expectation-of-the-transition-residual-during-employment-e_kr_ite2"><span class="header-section-number">7.4</span> Expectation of the transition residual during employment <span class="math inline">\(E_k[(r_{it}^E)^2]\)</span></h3>
+<p>The approach during employed periods is nearly identical. Persistent earnings during employed periods evolve according to:</p>
+<p><span class="math display">\[
+z_{it} = F z_{i,t-1} + B^E + \nu_{it} \qquad \nu_{it} \sim N(0,Q^E)
+\]</span></p>
+<p>and the squared transition residual during employed periods is:</p>
+<p><span class="math display">\[
+(r^{E}_{it})^2 = (z_{it} - \underbrace{(F z_{i,t-1} + B^E)}_{\text{predicted persistent earnings}})^2
+\]</span> and its expectation is</p>
+<p><span class="math display">\[
+\begin{aligned}
+E_k[(r^{E}_{it})^2] &amp;= E_k[ (z_{it} - F z_{i,t-1} - B^E)^2] \\
+&amp;= \boxed{(\hat{z}_{it|T} - F \hat{z}_{i,t-1|T} - B^E)^2 + M_{it|T}[1,1] + F^2 M_{it|T}[2,2] -2FM_{it|T}[1,2]}
+\end{aligned}
 \]</span></p>
 </section>
-<section id="updating-the-parameters" class="level3" data-number="7.3">
-<h3 data-number="7.3" class="anchored" data-anchor-id="updating-the-parameters"><span class="header-section-number">7.3</span> Updating the parameters</h3>
-<p>For the transition model we’ve been deriving, try a value of (F), compute the best (B^U) for that (F), then compute the best (Q^U) for that pair. Do the same for the employed group. That gives you the best transition log-likelihood you can achieve at that particular (F).</p>
-<p>The order within one M-step is: 1. Try a candidate (F). Compute (B^U(F)) and (B^E(F)) by making the average signed residual zero in each group. You can do this before knowing the variances because, within each group, the variance scales every squared residual by the same amount. 2. Compute (Q^U(F)) and (Q^E(F)). With the intercepts set, each variance is the average expected squared residual for its group. 3. Score that (F). Plug all four values back into the expected transition log-likelihood. Search over (F) and keep the value with the highest combined score.</p>
+<section id="scoring-the-square-of-the-transition-residual-during-employment-with-log-likelihood" class="level3" data-number="7.5">
+<h3 data-number="7.5" class="anchored" data-anchor-id="scoring-the-square-of-the-transition-residual-during-employment-with-log-likelihood"><span class="header-section-number">7.5</span> Scoring the square of the transition residual during employment with log-likelihood</h3>
+<p>Let <span class="math inline">\(\mathcal E\)</span> be the set of employed worker-year transitions and <span class="math inline">\(N_E\)</span> their count. Using the same calculation as for unemployment, the employed transitions contribute</p>
+<p><span class="math display">\[
+\sum_{(i,t)\in \mathcal E}
+\mathbb E_k[\ln f_\theta(z_{it}\mid z_{i,t-1})]
+=
+-\frac{N_E}{2}\ln(2\pi Q^E)
+-\frac{1}{2Q^E}
+\sum_{(i,t)\in \mathcal E}\mathbb E_k[(r^E_{it})^2].
+\]</span></p>
 </section>
-<section id="still-working-ignore" class="level3" data-number="7.4">
-<h3 data-number="7.4" class="anchored" data-anchor-id="still-working-ignore"><span class="header-section-number">7.4</span> Still working (ignore)</h3>
-<p>Now suppose the same worker is employed in period <span class="math inline">\(t\)</span>. We can think of this employed worker’s earnings as being generated in two steps.</p>
+<section id="the-combined-objective-function" class="level3" data-number="7.6">
+<h3 data-number="7.6" class="anchored" data-anchor-id="the-combined-objective-function"><span class="header-section-number">7.6</span> The combined objective function</h3>
+<p>A single persistence parameter <span class="math inline">\(F\)</span> has to fit both employed and unemployed periods. First we need to add the employed and unemployed transition contributions to the sums of expected log likelihoods.</p>
+<p>Let <span class="math inline">\(S_E(F,B^E)\)</span> and <span class="math inline">\(S_U(F,B^U)\)</span> be the sums of expected squared transition residuals in the two groups. Dropping the constant terms, the combined objective is</p>
+<p><span class="math display">\[
+  \ell_{\mathrm{trans}}
+  =
+    \underbrace{-\frac{N_E}{2}\ln Q^E
+      -\frac{S_E(F,B^E)}{2Q^E}}_{\text{employed transitions}}
+  +
+    \underbrace{-\frac{N_U}{2}\ln Q^U
+      -\frac{S_U(F,B^U)}{2Q^U}}_{\text{unemployed transitions}}.
+\]</span></p>
+</section>
+<section id="updating-the-persistence-parameter-widehat-f" class="level3" data-number="7.7">
+<h3 data-number="7.7" class="anchored" data-anchor-id="updating-the-persistence-parameter-widehat-f"><span class="header-section-number">7.7</span> Updating the persistence parameter <span class="math inline">\(\widehat F\)</span></h3>
+<p>To find the optimal <span class="math inline">\(\widehat F\)</span>, we differentiate the combined sum of expected square transition residuals object wrt <span class="math inline">\(F\)</span>, set equal to 0 and solve.</p>
+<p><span class="math display">\[
+\begin{aligned}
+\frac{\partial \ell}{\partial F} &amp;= \frac{\partial  }{\partial F}\left[-\frac{S_E(F,B^E)}{2Q^E} -\frac{S_U(F,B^U)}{2Q^U}\right] \\
+\frac{\partial \ell}{\partial F}
+&amp;=
+-\frac{1}{2Q^E}\frac{\partial S_E(F,B^E)}{\partial F}
+-\frac{1}{2Q^U}\frac{\partial S_U(F,B^U)}{\partial F} \\
+\end{aligned}
+\]</span></p>
+<p>For the employed term, differentiate the square inside the expectation. The derivative of the expression inside the square is <span class="math inline">\(-z_{i,t-1}\)</span> so</p>
+<p><span class="math display">\[
+\begin{aligned}
+-\frac{1}{2Q^E}\frac{\partial S_E(F,B^E)}{\partial F}
+&amp;=
+-\frac{1}{2Q^E}
+\sum_{(i,t)\in\mathcal E}
+\mathbb E_k\!\left[
+2(z_{it}-Fz_{i,t-1}-B^E)(-z_{i,t-1})
+\right]\\
+&amp;=
+\frac{1}{Q^E}
+\sum_{(i,t)\in\mathcal E}
+\mathbb E_k\!\left[
+z_{it}z_{i,t-1}-Fz_{i,t-1}^{2}-B^E z_{i,t-1}
+\right].
+\end{aligned}
+\]</span></p>
+<p>For the unemployed term the same chain rule gives</p>
+<p><span class="math display">\[
+-\frac{1}{2Q^U}\frac{\partial S_U(F,B^U)}{\partial F}
+=
+\frac{1}{Q^U}
+\sum_{(i,t)\in\mathcal U}
+\mathbb E_k\!\left[
+z_{it}z_{i,t-1}-Fz_{i,t-1}^{2}-B^U z_{i,t-1}
+\right].
+\]</span></p>
+<p>Set your derivative equal to zero. Move the two terms containing <span class="math inline">\(F\)</span> to the left and factor out <span class="math inline">\(F\)</span>:</p>
+<p><span class="math display">\[
+\begin{aligned}
+    F\left[
+      \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[z_{i,t-1}^2]
+      +
+        \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[z_{i,t-1}^2]
+      \right]
+    ={}&amp;
+      \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}
+    \mathbb E_k[(z_{it}-B^E)z_{i,t-1}]\\
+    &amp;+
+      \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}
+    \mathbb E_k[(z_{it}-B^U)z_{i,t-1}].
+    \end{aligned}
+\]</span></p>
+<p>Divide by the bracket to get</p>
+<p><span class="math display">\[
+  \boxed{
+    \widehat F=
+      \frac{
+        \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[(z_{it}-B^E)z_{i,t-1}]
+        +
+          \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[(z_{it}-B^U)z_{i,t-1}]
+      }{
+        \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[z_{i,t-1}^2]
+        +
+          \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[z_{i,t-1}^2]
+      }.
+  }
+\]</span></p>
+<p>This gives the best unconstrained <span class="math inline">\(F\)</span> for fixed intercepts and variances, provided the denominator is positive.</p>
+</section>
+<section id="updating-variance-parameters-widehatqu-widehat-qe" class="level3" data-number="7.8">
+<h3 data-number="7.8" class="anchored" data-anchor-id="updating-variance-parameters-widehatqu-widehat-qe"><span class="header-section-number">7.8</span> Updating variance parameters: <span class="math inline">\(\widehat{Q}^U, \widehat Q^E\)</span></h3>
+<p>To update the employment status-specific parameters differentiate the summed expectation of log-likelihoods during unemployment expression with respect to <span class="math inline">\(Q^U\)</span>, set it equal to zero and multiply through by <span class="math inline">\(2(Q^U)^2\)</span>. You get</p>
+<div style="overflow-x: auto; overflow-y: hidden;">
+<p><span class="math display">\[
+\frac{\partial}{\partial Q^U}
+\left[-\frac{N_U}{2}\ln(2\pi Q^U)-\frac{S_U}{2Q^U}\right]
+=
+-\frac{N_U}{2Q^U}+\frac{S_U}{2(Q^U)^2} = 0 \\
+\frac{N_U}{2Q^U} = \frac{S_U}{2(Q^U)^2} \\
+\widehat Q^U(F,B^U)
+=
+\boxed{\frac{1}{N_U}\sum_{(i,t)\in U}
+\mathbb E_k[(r^U_{it})^2]}.
+\]</span></p>
+</div>
+<p>The employed-specific version is:</p>
+<p><span class="math display">\[
+\boxed{\widehat Q^E(F, B^E) = \frac{1}{N_E}\sum_{(i,t)\in \mathcal E}
+\mathbb E_k[(r^E_{it})^2]}.
+\]</span></p>
+</section>
+<section id="updating-intercept-parameters-widehatbu-widehat-be" class="level3" data-number="7.9">
+<h3 data-number="7.9" class="anchored" data-anchor-id="updating-intercept-parameters-widehatbu-widehat-be"><span class="header-section-number">7.9</span> Updating intercept parameters: <span class="math inline">\(\widehat{B}^U, \widehat B^E\)</span></h3>
+<p>Then we can solve for <span class="math inline">\(B^U\)</span> in the same way.</p>
+<div style="overflow-x: auto; overflow-y: hidden;">
+<p><span class="math display">\[
+\begin{aligned}
+\frac{\partial}{\partial B^U}
+\left[-\frac{N_U}{2}\ln(2\pi Q^U)-\frac{S_U}{2Q^U}\right] &amp;= -\frac{\sum_{(i,t \in U)}(E_k[(z_{it} - F z_{i,t-1} - B^U)^2]}{2 Q^U} \\
+&amp;=\frac{\partial}{\partial B^U}\left[ - \frac{1}{2 Q^U} \sum_{(i,t) \in U}E_k[z_{it}^2] - 2FE_k[z_{it} z_{i,t-1}]- 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 E_k[z_{i,t-1}^2 ] + (B^U)^2  \right]\\
+&amp;= - \frac{1}{2 Q^U} \sum_{(i,t) \in U}(-2 E_k[z_{it}] + 2FE_k [z_{i,t-1}] + 2 B^U) \\
+&amp;= - \frac{1}{ Q^U} \sum_{(i,t) \in U}(- E_k[z_{it}] + FE_k [z_{i,t-1}] + B^U) \\
+&amp;= - \frac{1}{ Q^U}\left[ \sum_{(i,t) \in U}(- E_k[z_{it}] + FE_k [z_{i,t-1}])\right] + \frac{N_U B^U}{Q^U} \\
+\end{aligned}
+\]</span></p>
+</div>
+<p>Now set this equal to 0</p>
+<p><span class="math display">\[
+\begin{aligned}
+\sum_{(i,t) \in U}(E_k[z_{it}] - FE_k [z_{i,t-1}]) &amp;= N_U B^U \\
+\sum_{(i,t) \in U} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T}) &amp;= N_U B^U \\
+\boxed{\widehat{B}^U(F) = \frac{1}{N_U} \sum_{(i,t) \in U} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T})}
+\end{aligned}
+\]</span></p>
+<p>The employed-specific version is</p>
+<p><span class="math display">\[
+\boxed{\widehat{B}^E(F) = \frac{1}{N_E} \sum_{(i,t) \in \mathcal E} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T})}
+\]</span></p>
+</section>
+<section id="the-recipe" class="level3" data-number="7.10">
+<h3 data-number="7.10" class="anchored" data-anchor-id="the-recipe"><span class="header-section-number">7.10</span> The recipe</h3>
 <ol type="1">
-<li>Persistent earnings evolve. So given last year’s persistent earnings, the model generates this year’s persistent earnings. The transition density is:</li>
+<li>Try a value of <span class="math inline">\(F\)</span><br>
+</li>
+<li>Compute the best intercepts <span class="math inline">\(B^U\)</span> and <span class="math inline">\(B^E\)</span> for that trial <span class="math inline">\(F\)</span>.<br>
+</li>
+<li>Compute the trial variances. Given that <span class="math inline">\(F\)</span> and those intercepts, compute <span class="math inline">\(Q^U\)</span> and <span class="math inline">\(Q^E\)</span> from each group’s average expected squared residual. Use them to score the trial <span class="math inline">\(F\)</span><br>
+</li>
+<li>Keep the best-scoring <span class="math inline">\(F\)</span> and the intercepts and variances that went with it. Those five values become the new transition parameters together<br>
+</li>
+<li>Repeat the Kalman smoother using the updated parameters</li>
 </ol>
-<p><span class="math display">\[
-f(z_{it} | z_{i,t-1}; F, Q^E, B^E) = \frac{1}{\sqrt{2 \pi Q^E}} \exp( - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E})
-\]</span></p>
-<p>and its log-likelihood is:</p>
-<p><span class="math display">\[
-\ln(f(z_{it} | z_{i,t-1}; F, Q^E, B^E)) = -0.5\ln(2 \pi Q^E)  - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E}
-\]</span></p>
-<ol start="2" type="1">
-<li>Actual earnings are realized. So given this year’s persistent earnings <span class="math inline">\(z_{it}\)</span>, a temporary shock pushes actual earnings <span class="math inline">\(y_{it}\)</span> up or down. Think of a one-time bonus. That’s <span class="math inline">\(f(y_{it} | z_{it})\)</span>.<br>
-Using the measurement equation <span class="math inline">\(y_{it} = z_{it} + \omega_{it}\)</span> with <span class="math inline">\(\omega_{it} \sim N(0,R)\)</span>, we can write the log-likelihood as:</li>
-</ol>
-<p><span class="math display">\[
-f(y_{it} | z_{it}; R) = \frac{1}{\sqrt{2 \pi R}} \exp( - \frac{(y_{it} - z_{it})^2}{2 R})
-\]</span></p>
-<p>and its log-likelihood is:</p>
-<p><span class="math display">\[
-\ln(f(y_{it} | z_{it}; R)) = -0.5 \ln(2 \pi R)  - \frac{(y_{it} - z_{it})^2}{2 R}
-\]</span></p>
-<p>So for an employed period, the complete data log-likelihood contribution is</p>
-<p><span class="math display">\[
-\underbrace{\ln f(z_{it}\mid z_{i,t-1};F,Q^E,B^E)}_{\text{state transition}}
-+
-\underbrace{\ln f(y_{it}\mid z_{it};R)}_{\text{earnings measurement}}.
-\]</span></p>
-<p>If we could observe <span class="math inline">\(z_{it}\)</span> and <span class="math inline">\(z_{i,t-1}\)</span>, we could plug them directly into the state-transition term. But persistent earnings are latent, even in years when we observe actual earnings. So in the E-step, we use the current parameters and the worker’s full observed earnings history to infer which pairs <span class="math inline">\((z_{i,t-1}, z_{it})\)</span> are plausible. We then <strong>average the complete-data log-likelihood over that smoothed distribution</strong>. In the M-step, we hold the smoothed distribution fixed and choose new parameters that maximize this average.</p>
 </section>
 </section>
 

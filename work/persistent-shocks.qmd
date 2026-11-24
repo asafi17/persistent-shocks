@@ -878,13 +878,13 @@ ggplot(
     group = type
   )
 ) +
-  geom_ribbon(
-    data = \(d) d |> filter(type != "observed"),
-    aes(ymin = lower95, ymax = upper95),
-    alpha = 0.25,
-    colour = NA,
-    show.legend = FALSE
-  ) +
+geom_ribbon(
+  data = final |> filter(type != "observed"),
+  aes(ymin = lower95, ymax = upper95),
+  alpha = 0.25,
+  colour = NA,
+  show.legend = FALSE
+) +
   geom_line() +
   geom_point() +
   scale_linetype_manual(
@@ -910,7 +910,7 @@ ggplot(
 
 This works as expected! The Kalman smoother reduced our uncertainty around the persistent income state as evidenced by the thinner 95% confidence band. During unemployment $t=3$, the smoother incorporates information from periods 4 and 5 to revise the state downward during unemployment relative to the posterior and upward at period 4 because period 5's observed earnings were quite high. The smoothed estimate is *not* always closest to observed income. In the terminal period, the smoother and the posterior agree because there are no future observations remaining. The smoother's uncertainty reduction is really noticeable during the unemployment period. This is because the filter cannot update the state uncertainty estimate using an observation during this period -- there's no income to observe. So we just add uncertainty from period 2 to 3 from the new prediction. The smoother on the other hand can incorporate observed earnings in future periods to reduce uncertainty about the state in period 3.
 
-## Expectation Maximization (EM) \[Work in Progress\]
+## An Overview of Expectation Maximization (EM)
 
 ### Why do we need EM?
 
@@ -1115,7 +1115,7 @@ $$
 
 So far we've used the Kalman filter and smoother to estimate each worker's latent earnings state, taking the parameters like persistence and the shock variances as given. Now we ask how do we estimate those parameters from the earnings histories we actually observe? The filter gives us a way to score any candidate set of parameters by adding up the log predictive densities of its one step ahead earnings forecast. The EM algorithm gives us a way to improve that score. In the E-step, we run the Kalman smoother using the current parameters so that each worker's full earnings history informs what we infer about their latent states. In the M-step, we use those smoothed expectations to update the parameters. We repeat the two steps until the observed-data log-likelihood converges. 
 
-### Walkthrough
+### Expectation of the transition residual during $E_k[(r_{it}^U)^2]$
 
 Suppose a worker is unemployed in a particular year. Their persistent earnings evolve according to 
 
@@ -1131,7 +1131,6 @@ $$
 
 Our Kalman smoother produces estimates of our latent states. So taking the expectation of this squared residual, we find: 
 
-
 ::: {style="overflow-x: auto; overflow-y: hidden;"}
 
 $$
@@ -1139,14 +1138,18 @@ $$
 E_k[(r^{U}_{it})^2] &= E_k[ (z_{it} - F z_{i,t-1} - B^U)^2] \\ 
 &= E_k[z_{it}^2 - 2 F z_{it} z_{i,t-1} - 2 B^U z_{it} + 2 B^U F z_{i,t-1} + F^2 z_{i,t-1}^2 + (B^U)^2] \\
 &= E_k[z_{it}^2] - 2FE_k[z_{it} z_{i,t-1}]- 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 E_k[z_{i,t-1}^2 ] + (B^U)^2 \\ 
-&= (\text{Var}_k(z_{it}) + E_k[z_{it}]^2) -  2F (\text{Cov}_k(z_{it} ,z_{i,t-1}) + E_k[z_{it}] E[z_{i,t-1}]) - 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 (\text{Var}_k(z_{i,t-1}) + E_k[z_{i,t-1}]^2) + (B^U)^2 \\
-&= \boxed{(\mathbb E_k[z_{it}]-F\mathbb E_k[z_{i,t-1}]-B^U\bigr)^2 +\operatorname{Var}_k(z_{it})
+&= (\text{Var}_k(z_{it}) + E_k[z_{it}]^2) -  2F (\text{Cov}_k(z_{it} ,z_{i,t-1}) + E_k[z_{it}] E_k[z_{i,t-1}]) - 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 (\text{Var}_k(z_{i,t-1}) + E_k[z_{i,t-1}]^2) + (B^U)^2 \\
+&= (\mathbb E_k[z_{it}]-F\mathbb E_k[z_{i,t-1}]-B^U\bigr)^2 +\operatorname{Var}_k(z_{it})
 +F^2\operatorname{Var}_k(z_{i,t-1})
--2F\operatorname{Cov}_k(z_{it},z_{i,t-1})}.
+-2F\operatorname{Cov}_k(z_{it},z_{i,t-1}) \\ 
+&= \boxed{(\hat{z}_{it|T} - F \hat{z}_{i,t-1|T} - B^U)^2 + M_{it|T}[1,1] + F^2 M_{it|T}[2,2] -2FM_{it|T}[1,2]}
 \end{aligned}
 $$
 
 :::
+
+
+### Scoring the square of the transition residual during unemployment with log-likelihood
 
 
 :::{.callout-note}
@@ -1178,66 +1181,227 @@ $$
 The residual measures the state equation's prediction error. The log-density then scores that miss under the candidate shock variance $Q^U$. However, once again, we need to work with expectations because persistent earnings are latent. So if we take the *expectation* of this log-likelihood, we get (recall that $Q^U$ is fixed):
 
 $$
-\mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U}
+\mathbb E_k[\ln f_{\theta} (z_{it} | z_{i,t-1})] = -.5 \ln(2 \pi Q^U) - \frac{\mathbb E_k[(r^U_{it})^2]}{2 Q^U} \\ 
+$$
+
+Next, let $U$ be the set of worker-year transitions in which the worker is unemployed in year $t$, and let $N_U$ be the number of those transitions. Adding their expected log-density contribution gives: 
+
+$$
+\sum_{(i,t)\in U}
+\mathbb E_k[\ln f_\theta(z_{it}\mid z_{i,t-1})]
+=
+-\frac{N_U}{2}\ln(2\pi Q^U)
+-\frac{1}{2Q^U}
+\sum_{(i,t)\in U}\mathbb E_k[(r^U_{it})^2].
+$$
+
+where the expectation averages over plausible latent state pairs within each transition. Let $S_U =  \sum_{(i,t)\in U}\mathbb E_k[(r^U_{it})^2]$. The sum adds those contributions across transitions. 
+
+
+### Expectation of the transition residual during employment $E_k[(r_{it}^E)^2]$
+
+The approach during employed periods is nearly identical. Persistent earnings during employed periods evolve according to: 
+
+$$
+z_{it} = F z_{i,t-1} + B^E + \nu_{it} \qquad \nu_{it} \sim N(0,Q^E)
+$$
+
+and the squared transition residual during employed periods is:
+
+$$
+(r^{E}_{it})^2 = (z_{it} - \underbrace{(F z_{i,t-1} + B^E)}_{\text{predicted persistent earnings}})^2
+$$
+and its expectation is 
+
+$$
+\begin{aligned}
+E_k[(r^{E}_{it})^2] &= E_k[ (z_{it} - F z_{i,t-1} - B^E)^2] \\ 
+&= \boxed{(\hat{z}_{it|T} - F \hat{z}_{i,t-1|T} - B^E)^2 + M_{it|T}[1,1] + F^2 M_{it|T}[2,2] -2FM_{it|T}[1,2]}
+\end{aligned}
+$$
+
+### Scoring the square of the transition residual during employment with log-likelihood
+
+Let $\mathcal E$ be the set of employed worker-year transitions and $N_E$ their count. Using the same calculation as for unemployment, the employed transitions contribute 
+
+$$
+\sum_{(i,t)\in \mathcal E}
+\mathbb E_k[\ln f_\theta(z_{it}\mid z_{i,t-1})]
+=
+-\frac{N_E}{2}\ln(2\pi Q^E)
+-\frac{1}{2Q^E}
+\sum_{(i,t)\in \mathcal E}\mathbb E_k[(r^E_{it})^2].
 $$
 
 
+### The combined objective function
 
-### Updating the parameters
+A single persistence parameter $F$ has to fit both employed and unemployed periods. First we need to add the employed and unemployed transition contributions to the sums of expected log likelihoods.
 
-For the transition model we’ve been deriving, try a value of \(F\), compute the best \(B^U\) for that \(F\), then compute the best \(Q^U\) for that pair. Do the same for the employed group. That gives you the best transition log-likelihood you can achieve at that particular \(F\).
-
-The order within one M-step is:
-1. Try a candidate \(F\). Compute \(B^U(F)\) and \(B^E(F)\) by making the average signed residual zero in each group. You can do this before knowing the variances because, within each group, the variance scales every squared residual by the same amount.
-2. Compute \(Q^U(F)\) and \(Q^E(F)\). With the intercepts set, each variance is the average expected squared residual for its group.
-3. Score that \(F\). Plug all four values back into the expected transition log-likelihood. Search over \(F\) and keep the value with the highest combined score.
-
-
-### Still working (ignore)
-
-Now suppose the same worker is employed in period $t$. We can think of this employed worker's earnings as being generated in two steps. 
-
-1. Persistent earnings evolve. So given last year's persistent earnings, the model generates this year's persistent earnings. The transition density is:
+Let $S_E(F,B^E)$ and $S_U(F,B^U)$ be the sums of expected squared transition residuals in the two groups. Dropping the constant terms, the combined objective is
 
 $$
-f(z_{it} | z_{i,t-1}; F, Q^E, B^E) = \frac{1}{\sqrt{2 \pi Q^E}} \exp( - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E})
+  \ell_{\mathrm{trans}}
+  =
+    \underbrace{-\frac{N_E}{2}\ln Q^E
+      -\frac{S_E(F,B^E)}{2Q^E}}_{\text{employed transitions}}
+  +
+    \underbrace{-\frac{N_U}{2}\ln Q^U
+      -\frac{S_U(F,B^U)}{2Q^U}}_{\text{unemployed transitions}}.
 $$
 
-and its log-likelihood is:
+### Updating the persistence parameter $\widehat F$
+
+To find the optimal $\widehat F$, we differentiate the combined sum of expected square transition residuals object wrt $F$, set equal to 0 and solve. 
 
 $$
-\ln(f(z_{it} | z_{i,t-1}; F, Q^E, B^E)) = -0.5\ln(2 \pi Q^E)  - \frac{(z_{it} - F z_{i,t-1} - B^E)^2}{2 Q^E}
+\begin{aligned}
+\frac{\partial \ell}{\partial F} &= \frac{\partial  }{\partial F}\left[-\frac{S_E(F,B^E)}{2Q^E} -\frac{S_U(F,B^U)}{2Q^U}\right] \\
+\frac{\partial \ell}{\partial F}
+&=
+-\frac{1}{2Q^E}\frac{\partial S_E(F,B^E)}{\partial F}
+-\frac{1}{2Q^U}\frac{\partial S_U(F,B^U)}{\partial F} \\ 
+\end{aligned}
 $$
 
-2. Actual earnings are realized. So given this year's persistent earnings $z_{it}$, a temporary shock pushes actual earnings $y_{it}$ up or down. Think of a one-time bonus. That's $f(y_{it} | z_{it})$.  
-Using the measurement equation $y_{it} = z_{it} + \omega_{it}$ with $\omega_{it} \sim N(0,R)$, we can write the log-likelihood as: 
+For the employed term, differentiate the square inside the expectation. The derivative of the expression inside the square is $-z_{i,t-1}$ so 
 
 $$
-f(y_{it} | z_{it}; R) = \frac{1}{\sqrt{2 \pi R}} \exp( - \frac{(y_{it} - z_{it})^2}{2 R})
+\begin{aligned}
+-\frac{1}{2Q^E}\frac{\partial S_E(F,B^E)}{\partial F}
+&=
+-\frac{1}{2Q^E}
+\sum_{(i,t)\in\mathcal E}
+\mathbb E_k\!\left[
+2(z_{it}-Fz_{i,t-1}-B^E)(-z_{i,t-1})
+\right]\\
+&=
+\frac{1}{Q^E}
+\sum_{(i,t)\in\mathcal E}
+\mathbb E_k\!\left[
+z_{it}z_{i,t-1}-Fz_{i,t-1}^{2}-B^E z_{i,t-1}
+\right].
+\end{aligned}
 $$
 
-and its log-likelihood is: 
+For the unemployed term the same chain rule gives 
 
 $$
-\ln(f(y_{it} | z_{it}; R)) = -0.5 \ln(2 \pi R)  - \frac{(y_{it} - z_{it})^2}{2 R}
+-\frac{1}{2Q^U}\frac{\partial S_U(F,B^U)}{\partial F}
+=
+\frac{1}{Q^U}
+\sum_{(i,t)\in\mathcal U}
+\mathbb E_k\!\left[
+z_{it}z_{i,t-1}-Fz_{i,t-1}^{2}-B^U z_{i,t-1}
+\right].
 $$
 
-So for an employed period, the complete data log-likelihood contribution is
+Set your derivative equal to zero. Move the two terms containing $F$ to the left and factor out $F$:
 
 $$
-\underbrace{\ln f(z_{it}\mid z_{i,t-1};F,Q^E,B^E)}_{\text{state transition}}
-+
-\underbrace{\ln f(y_{it}\mid z_{it};R)}_{\text{earnings measurement}}.
+\begin{aligned}
+    F\left[
+      \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[z_{i,t-1}^2]
+      +
+        \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[z_{i,t-1}^2]
+      \right]
+    ={}&
+      \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}
+    \mathbb E_k[(z_{it}-B^E)z_{i,t-1}]\\
+    &+
+      \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}
+    \mathbb E_k[(z_{it}-B^U)z_{i,t-1}].
+    \end{aligned}
 $$
 
-If we could observe $z_{it}$ and $z_{i,t-1}$, we could plug them directly into the state-transition term. But persistent earnings are latent, even in years when we observe actual earnings. So in the E-step, we use the current parameters and the worker's full observed earnings history to infer which pairs $(z_{i,t-1}, z_{it})$ are plausible. We then **average the complete-data log-likelihood over that smoothed distribution**. In the M-step, we hold the smoothed distribution fixed and choose new parameters that maximize this average. 
+
+Divide by the bracket to get
+
+$$
+  \boxed{
+    \widehat F=
+      \frac{
+        \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[(z_{it}-B^E)z_{i,t-1}]
+        +
+          \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[(z_{it}-B^U)z_{i,t-1}]
+      }{
+        \frac{1}{Q^E}\sum_{(i,t)\in\mathcal E}\mathbb E_k[z_{i,t-1}^2]
+        +
+          \frac{1}{Q^U}\sum_{(i,t)\in\mathcal U}\mathbb E_k[z_{i,t-1}^2]
+      }.
+  }
+$$
+
+This gives the best unconstrained $F$ for fixed intercepts and variances, provided the denominator is positive.
+
+### Updating variance parameters: $\widehat{Q}^U, \widehat Q^E$
+
+To update the employment status-specific parameters differentiate the summed expectation of log-likelihoods during unemployment expression with respect to $Q^U$, set it equal to zero and multiply through by $2(Q^U)^2$. You get
+
+::: {style="overflow-x: auto; overflow-y: hidden;"}
+
+$$
+\frac{\partial}{\partial Q^U}
+\left[-\frac{N_U}{2}\ln(2\pi Q^U)-\frac{S_U}{2Q^U}\right]
+=
+-\frac{N_U}{2Q^U}+\frac{S_U}{2(Q^U)^2} = 0 \\
+\frac{N_U}{2Q^U} = \frac{S_U}{2(Q^U)^2} \\ 
+\widehat Q^U(F,B^U)
+=
+\boxed{\frac{1}{N_U}\sum_{(i,t)\in U}
+\mathbb E_k[(r^U_{it})^2]}.
+$$
+
+:::
+
+The employed-specific version is: 
+
+$$
+\boxed{\widehat Q^E(F, B^E) = \frac{1}{N_E}\sum_{(i,t)\in \mathcal E}
+\mathbb E_k[(r^E_{it})^2]}.
+$$
 
 
+### Updating intercept parameters: $\widehat{B}^U, \widehat B^E$
 
+Then we can solve for $B^U$ in the same way.
 
+::: {style="overflow-x: auto; overflow-y: hidden;"}
 
+$$ 
+\begin{aligned}
+\frac{\partial}{\partial B^U}
+\left[-\frac{N_U}{2}\ln(2\pi Q^U)-\frac{S_U}{2Q^U}\right] &= -\frac{\sum_{(i,t \in U)}(E_k[(z_{it} - F z_{i,t-1} - B^U)^2]}{2 Q^U} \\
+&=\frac{\partial}{\partial B^U}\left[ - \frac{1}{2 Q^U} \sum_{(i,t) \in U}E_k[z_{it}^2] - 2FE_k[z_{it} z_{i,t-1}]- 2 B^U E_k[z_{it}] + 2B^U F E_k[z_{i,t-1}] + F^2 E_k[z_{i,t-1}^2 ] + (B^U)^2  \right]\\
+&= - \frac{1}{2 Q^U} \sum_{(i,t) \in U}(-2 E_k[z_{it}] + 2FE_k [z_{i,t-1}] + 2 B^U) \\ 
+&= - \frac{1}{ Q^U} \sum_{(i,t) \in U}(- E_k[z_{it}] + FE_k [z_{i,t-1}] + B^U) \\ 
+&= - \frac{1}{ Q^U}\left[ \sum_{(i,t) \in U}(- E_k[z_{it}] + FE_k [z_{i,t-1}])\right] + \frac{N_U B^U}{Q^U} \\
+\end{aligned}
+$$
 
+:::
 
+Now set this equal to 0 
 
+$$
+\begin{aligned}
+\sum_{(i,t) \in U}(E_k[z_{it}] - FE_k [z_{i,t-1}]) &= N_U B^U \\
+ \sum_{(i,t) \in U} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T}) &= N_U B^U \\ 
+\boxed{\widehat{B}^U(F) = \frac{1}{N_U} \sum_{(i,t) \in U} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T})}
+\end{aligned}
+$$
 
+The employed-specific version is
+
+$$
+\boxed{\widehat{B}^E(F) = \frac{1}{N_E} \sum_{(i,t) \in \mathcal E} (\hat{z}_{it|T} - F \hat{z}_{i,t-1|T})}
+$$
+
+### The recipe 
+
+1. Try a value of $F$   
+2. Compute the best intercepts $B^U$ and $B^E$ for that trial $F$.    
+3. Compute the trial variances. Given that $F$ and those intercepts, compute $Q^U$ and $Q^E$ from each group’s average expected squared residual. Use them to score the trial $F$  
+4. Keep the best-scoring $F$ and the intercepts and variances that went with it. Those five values become the new transition parameters together  
+5. Repeat the Kalman smoother using the updated parameters  
 
